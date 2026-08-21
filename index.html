@@ -1,0 +1,2454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My'Apping — MDM v2.4</title>
+<style>
+/* ═══════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:13px;color:#1a1a1a;background:#f7f7f5;min-height:100vh}
+:root{
+  --sb-w:220px;
+  --sb-bg:#1a1a2e;
+  --blue:#4f6ef7;
+  --blue-light:#eff6ff;
+  --green:#16a34a;
+  --green-light:#f0fdf4;
+  --red:#dc2626;
+  --red-light:#fef2f2;
+  --orange:#d97706;
+  --orange-light:#fffbeb;
+  --border:#e8e8e6;
+  --surface:#fafaf8;
+}
+
+/* ═══════════════════════════════════════════════
+   LOGIN
+═══════════════════════════════════════════════ */
+#screen-login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f2942 0%,#1a5fa5 55%,#1d9e75 100%);padding:1rem}
+.login-card{background:#fff;border-radius:14px;padding:2.5rem 2rem;width:100%;max-width:380px;display:flex;flex-direction:column;gap:1.25rem;box-shadow:0 24px 64px rgba(0,0,0,.22)}
+.login-brand{display:flex;align-items:center;gap:12px}
+.login-brand-icon{width:40px;height:40px;background:var(--sb-bg);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.login-brand-name{font-size:16px;font-weight:700;letter-spacing:-.2px}
+.login-brand-sub{font-size:10px;color:#aaa;margin-top:1px}
+.ldiv{height:.5px;background:#f0f0ee}
+.login-fields{display:flex;flex-direction:column;gap:10px}
+.login-field-group{display:flex;flex-direction:column;gap:4px}
+.login-field-group label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#888}
+.login-input{padding:9px 11px;border-radius:7px;border:.5px solid #ddd;font-size:13px;outline:none;transition:border .15s;width:100%}
+.login-input:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(147,197,253,.15)}
+.login-error{font-size:12px;color:var(--red);background:var(--red-light);padding:7px 10px;border-radius:6px;border:.5px solid #fca5a5;display:none}
+.login-error.show{display:block}
+.btn-login{width:100%;padding:10px;border-radius:8px;border:none;background:var(--sb-bg);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn-login:hover:not(:disabled){opacity:.82}
+.btn-login:disabled{opacity:.45;cursor:not-allowed}
+.login-spinner{display:none;align-items:center;justify-content:center;gap:8px;font-size:12px;color:#999}
+.login-spinner.show{display:flex}
+.ls{width:16px;height:16px;border:2px solid #e8e8e6;border-top-color:var(--blue);border-radius:50%;animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══════════════════════════════════════════════
+   LAYOUT GÉNÉRAL
+═══════════════════════════════════════════════ */
+#screen-sd,#screen-admin{display:none;min-height:100vh;flex-direction:row}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════ */
+.sidebar{width:var(--sb-w);flex-shrink:0;background:var(--sb-bg);display:flex;flex-direction:column;min-height:100vh;transition:width .2s ease;overflow:hidden}
+.sidebar.collapsed{width:52px}
+.sidebar.collapsed .sb-label,
+.sidebar.collapsed .sb-section,
+.sidebar.collapsed .sb-brand-ver,
+.sidebar.collapsed .sb-user-info,
+.sidebar.collapsed .sb-item-badge,
+.sidebar.collapsed .sb-admin-toggle-label{display:none}
+.sidebar.collapsed .sb-brand-text{display:none}
+.sidebar.collapsed .sb-item{justify-content:center;padding:8px 0}
+.sidebar.collapsed .sb-item-icon{width:100%;text-align:center;margin:0}
+.sidebar.collapsed .sb-user{justify-content:center}
+.sidebar.collapsed .sb-user-avatar{margin:0}
+
+.sb-brand{padding:.9rem .85rem;display:flex;align-items:center;gap:8px;border-bottom:.5px solid rgba(255,255,255,.07);flex-shrink:0}
+.sb-brand-icon{width:28px;height:28px;background:rgba(255,255,255,.1);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.sb-brand-text{display:flex;flex-direction:column;min-width:0}
+.sb-brand-name{font-size:13px;font-weight:700;color:#fff;white-space:nowrap}
+.sb-brand-ver{font-size:9px;color:rgba(255,255,255,.3);margin-top:1px}
+
+.sb-section{padding:.5rem .85rem .2rem;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.28);white-space:nowrap}
+.sb-item{display:flex;align-items:center;gap:9px;padding:7px 11px;margin:1px 6px;border-radius:7px;cursor:pointer;color:rgba(255,255,255,.52);font-size:12px;font-weight:500;transition:all .13s;user-select:none;white-space:nowrap}
+.sb-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.82)}
+.sb-item.active{background:rgba(255,255,255,.12);color:#fff}
+.sb-item-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.sb-label{flex:1}
+.sb-item-badge{margin-left:auto;background:rgba(255,255,255,.13);color:rgba(255,255,255,.55);font-size:9px;padding:1px 6px;border-radius:10px}
+
+.sb-footer{margin-top:auto;padding:.75rem .75rem .85rem;border-top:.5px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.sb-user{display:flex;align-items:center;gap:8px;padding:5px 4px;border-radius:6px;cursor:pointer;transition:background .13s}
+.sb-user:hover{background:rgba(255,255,255,.07)}
+.sb-user-avatar{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-user-info{display:flex;flex-direction:column;min-width:0}
+.sb-user-name{font-size:11px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-user-role{font-size:9px;color:rgba(255,255,255,.38)}
+
+/* Toggle admin dans footer sidebar */
+.sb-admin-toggle{display:flex;align-items:center;gap:8px;padding:5px 4px;cursor:pointer}
+.sb-admin-toggle-label{font-size:11px;color:rgba(255,255,255,.5);flex:1}
+.toggle-sw{width:32px;height:18px;background:rgba(255,255,255,.15);border-radius:9px;position:relative;transition:background .2s;flex-shrink:0}
+.toggle-sw.on{background:#4f6ef7}
+.toggle-sw::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle-sw.on::after{transform:translateX(14px)}
+
+/* ═══════════════════════════════════════════════
+   MAIN
+═══════════════════════════════════════════════ */
+.app-main{flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0;background:#f7f7f5}
+
+.topbar{background:#fff;border-bottom:.5px solid var(--border);padding:.6rem 1.25rem;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.topbar-collapse-btn{width:28px;height:28px;border-radius:6px;border:.5px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:#888;transition:all .13s;flex-shrink:0}
+.topbar-collapse-btn:hover{background:var(--surface);color:#333}
+.topbar-title-group{display:flex;flex-direction:column;flex:1;min-width:0}
+.topbar-title{font-size:15px;font-weight:600;color:#1a1a1a}
+.topbar-sub{font-size:11px;color:#999;margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.ctx-label{font-size:10px;color:#bbb;font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+.ctx-select{font-size:12px;font-weight:500;padding:5px 10px;border-radius:7px;border:.5px solid var(--border);background:#fff;outline:none;color:var(--sb-bg);cursor:pointer}
+.ctx-select:focus{border-color:#93c5fd}
+.tb-user-btn{display:flex;align-items:center;gap:7px;padding:4px 10px;border-radius:20px;border:.5px solid var(--border);background:#fff;cursor:pointer;font-size:11px;color:#555;transition:background .1s}
+.tb-user-btn:hover{background:var(--surface)}
+.tb-avatar{width:22px;height:22px;border-radius:50%;background:var(--sb-bg);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0}
+
+.content{flex:1;padding:1.25rem;display:flex;flex-direction:column;gap:.75rem}
+.content.hidden{display:none}
+
+/* ═══════════════════════════════════════════════
+   COMPOSANTS COMMUNS
+═══════════════════════════════════════════════ */
+.btn{font-size:12px;padding:6px 12px;border-radius:7px;border:.5px solid var(--border);background:#fff;color:#333;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .12s;line-height:1.4;white-space:nowrap;font-weight:500}
+.btn:hover:not(:disabled){background:var(--surface)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover:not(:disabled){background:#3b5be0}
+.btn.ghost{background:#fff;border-color:var(--border);color:#555}
+.btn.ghost:hover{background:var(--surface)}
+.btn.danger{background:var(--red-light);border-color:#fca5a5;color:var(--red)}
+.btn.danger:hover:not(:disabled){background:var(--red);color:#fff}
+.btn.success{background:var(--green-light);border-color:#86efac;color:var(--green)}
+.btn.sm{font-size:11px;padding:4px 9px}
+.btn.xs{font-size:10px;padding:2px 7px;border-radius:4px}
+
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600}
+.badge-blue{background:var(--blue-light);color:#1d4ed8;border:.5px solid #bfdbfe}
+.badge-green{background:var(--green-light);color:#166534;border:.5px solid #86efac}
+.badge-red{background:var(--red-light);color:#991b1b;border:.5px solid #fca5a5}
+.badge-orange{background:var(--orange-light);color:#92400e;border:.5px solid #fcd34d}
+.badge-gray{background:#f5f5f3;color:#555;border:.5px solid #e0e0de}
+.badge-purple{background:#faf5ff;color:#6d28d9;border:.5px solid #ddd6fe}
+
+.card{background:#fff;border:.5px solid var(--border);border-radius:10px;overflow:hidden}
+.card-header{padding:.85rem 1rem;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:8px}
+.card-header-title{font-size:13px;font-weight:600;flex:1}
+.card-body{padding:1rem}
+
+.filters-bar{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;min-width:160px;max-width:380px}
+.search-wrap input{width:100%;padding:7px 10px 7px 30px;border-radius:7px;border:.5px solid var(--border);background:#fff;font-size:12px;color:#333;outline:none;transition:border .15s}
+.search-wrap input:focus{border-color:#93c5fd}
+.search-wrap input::placeholder{color:#bbb}
+.search-ico{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#bbb;font-size:13px;pointer-events:none}
+.fsel{font-size:12px;padding:6px 9px;border-radius:7px;border:.5px solid var(--border);background:#fff;outline:none;color:#333;cursor:pointer}
+.fsel:focus{border-color:#93c5fd}
+
+.status-bar{display:flex;align-items:center;gap:6px;font-size:11px;color:#999}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+
+/* Tables */
+.data-table-wrap{background:#fff;border:.5px solid var(--border);border-radius:10px;overflow:auto}
+.data-table{width:100%;border-collapse:collapse}
+.data-table thead tr{border-bottom:.5px solid var(--border);background:var(--surface)}
+.data-table th{text-align:left;padding:8px 10px;font-size:10px;font-weight:700;color:#999;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;user-select:none}
+.data-table th.sortable{cursor:pointer;display:table-cell}
+.data-table th.sortable:hover{color:#555}
+.sort-icon{margin-left:3px;opacity:.4;font-size:10px}
+.sort-icon.asc::after{content:'↑'}
+.sort-icon.desc::after{content:'↓'}
+.sort-icon.none::after{content:'↕'}
+.data-table td{padding:8px 10px;border-bottom:.5px solid #f0f0ee;vertical-align:middle}
+.data-table tbody tr:last-child td{border-bottom:none}
+.data-table tbody tr:hover{background:var(--surface)}
+.data-table tbody tr.dragging{opacity:.3}
+.data-table tbody tr.drag-over td{border-top:2px solid var(--blue)}
+
+/* Cellule éditable inline */
+.cell-editable{cursor:text;border-radius:4px;padding:2px 4px;transition:background .1s;min-width:40px;display:inline-block;outline:none}
+.cell-editable:hover{background:#f0f0ff}
+.cell-editable:focus{background:#f0f7ff;outline:.5px solid #93c5fd;border-radius:4px}
+.cell-editable.error{background:var(--red-light);outline:.5px solid #fca5a5}
+.dupe-banner{background:var(--red-light);border:.5px solid #fca5a5;color:var(--red);font-size:12px;padding:7px 12px;border-radius:7px;display:none;align-items:center;gap:7px}
+.dupe-banner.show{display:flex}
+
+/* Drag handle */
+.drag-handle{color:#d0d0ce;cursor:grab;font-size:14px;user-select:none}
+.drag-handle:hover{color:#888}
+
+/* NIV badges */
+.niv-n1{background:#f0f0ff;color:#4f46e5;font-size:11px;font-weight:700;padding:1px 5px;border-radius:3px}
+.niv-n2{background:#f0f9ff;color:#0284c7;font-size:11px;font-weight:700;padding:1px 5px;border-radius:3px}
+.niv-n3{background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:700;padding:1px 5px;border-radius:3px}
+.niv0-code{font-family:'SF Mono',Consolas,monospace;font-size:11px;font-weight:600;color:#666;background:#f5f5f3;padding:2px 6px;border-radius:4px}
+.id-code{font-family:'SF Mono',Consolas,monospace;font-size:11px;color:var(--blue);font-weight:500}
+.comm-cell{font-size:11px;color:#9ca3af;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.comm-cell.has-comm{color:#6b7280}
+
+/* Row actions */
+.row-actions{display:none;align-items:center;gap:2px;justify-content:flex-end}
+.data-table tbody tr:hover .row-actions{display:flex}
+.act-btn{width:24px;height:24px;border-radius:5px;border:.5px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;transition:all .1s}
+.act-btn:hover{background:#f0f0ff;border-color:#c7d2fe;color:var(--blue)}
+.act-btn.del:hover{background:var(--red-light);border-color:#fca5a5;color:var(--red)}
+
+/* Bottom bar */
+.bottom-bar{padding:.5rem 1.25rem;border-top:.5px solid var(--border);background:#fff;display:flex;align-items:center;gap:10px;font-size:11px;color:#999;flex-shrink:0}
+.kbd{font-size:10px;background:#f5f5f3;border:.5px solid #e0e0de;padding:1px 5px;border-radius:3px;color:#888}
+
+/* Notif toast */
+.notif{font-size:12px;padding:8px 14px;border-radius:8px;display:none;align-items:center;gap:7px;font-weight:500;position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.12);max-width:360px}
+.notif.show{display:flex}
+.notif.success{background:var(--green-light);border:.5px solid #86efac;color:#166534}
+.notif.error{background:var(--red-light);border:.5px solid #fca5a5;color:#991b1b}
+.notif.info{background:var(--blue-light);border:.5px solid #bfdbfe;color:#1e40af}
+.notif.warn{background:var(--orange-light);border:.5px solid #fcd34d;color:#92400e}
+
+/* ═══════════════════════════════════════════════
+   MODAUX
+═══════════════════════════════════════════════ */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:1000;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:560px;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.18);max-height:92vh;overflow:hidden}
+.modal-header{padding:1.2rem 1.5rem .7rem;flex-shrink:0}
+.modal-header h3{font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.modal-sub{font-size:12px;color:#999;margin-top:3px}
+.close-btn{width:26px;height:26px;border-radius:6px;border:.5px solid var(--border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:#aaa;transition:all .1s;flex-shrink:0}
+.close-btn:hover{background:var(--surface);color:#555}
+.modal-body{padding:.75rem 1.5rem 1.25rem;overflow-y:auto;display:flex;flex-direction:column;gap:.85rem}
+.modal-footer{padding:.75rem 1.5rem;border-top:.5px solid #f0f0ee;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface);border-radius:0 0 14px 14px}
+.modal-footer-kbd{font-size:11px;color:#ccc;display:flex;align-items:center;gap:5px}
+.modal-footer-btns{display:flex;gap:8px}
+
+/* Sélecteur niveau */
+.niveau-selector{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;background:#f5f5f3;border-radius:8px;padding:3px;border:.5px solid var(--border)}
+.niveau-btn{padding:7px 0;text-align:center;font-size:13px;font-weight:500;color:#999;border-radius:6px;cursor:pointer;transition:all .15s;border:none;background:none;user-select:none}
+.niveau-btn:hover{color:#555}
+.niveau-btn.active{background:var(--blue);color:#fff;font-weight:600;box-shadow:0 1px 4px rgba(79,110,247,.3)}
+
+/* ID calculé */
+.id-calc-box{background:#f8f8ff;border:.5px solid #e0e4ff;border-radius:8px;padding:.8rem 1rem}
+.id-calc-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin-bottom:4px}
+.id-calc-value{font-size:16px;font-weight:700;color:var(--blue);font-family:'SF Mono',Consolas,monospace;letter-spacing:.02em}
+.id-calc-hint{font-size:10px;color:#bbb;margin-top:3px}
+
+/* Bloc ref lecture seule */
+.ref-block{border:.5px solid var(--border);border-radius:8px;overflow:hidden}
+.ref-block-header{padding:7px 11px;background:var(--surface);display:flex;align-items:center;gap:7px;border-bottom:.5px solid #f0f0ee}
+.ref-block-title{font-size:11px;font-weight:600;color:#555}
+.ref-block-badge{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:2px 6px;border-radius:3px;background:#f0f0ee;color:#999;border:.5px solid var(--border)}
+.ref-search{width:100%;padding:7px 11px;border:none;border-bottom:.5px solid #f0f0ee;font-size:12px;outline:none;background:#fff;color:#555}
+.ref-search::placeholder{color:#ccc}
+.ref-list{max-height:120px;overflow-y:auto}
+.ref-item{display:flex;align-items:center;gap:9px;padding:6px 11px;border-bottom:.5px solid #fafaf8;font-size:12px;color:#374151}
+.ref-item:last-child{border-bottom:none}
+.ref-item:hover{background:var(--surface)}
+.ref-num{font-weight:700;color:#9ca3af;min-width:20px}
+.ref-empty{padding:10px 11px;font-size:12px;color:#ccc;font-style:italic}
+
+/* Parent selectors */
+.parent-row{display:grid;gap:10px}
+.parent-row.two{grid-template-columns:1fr 1fr}
+.parent-row.one{grid-template-columns:1fr}
+.parent-group{display:flex;flex-direction:column;gap:5px}
+.parent-group label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#666}
+.parent-group select{padding:8px 10px;border-radius:7px;border:.5px solid var(--border);font-size:13px;outline:none;background:#fff;cursor:pointer;transition:border .15s}
+.parent-group select:focus{border-color:#93c5fd}
+.parent-group select:disabled{background:var(--surface);color:#ccc;cursor:not-allowed}
+
+/* Champs formulaire */
+.field-group{display:flex;flex-direction:column;gap:4px}
+.field-group label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#666}
+.field-input{padding:8px 10px;border-radius:7px;border:.5px solid var(--border);font-size:13px;outline:none;transition:border .15s;width:100%;font-family:inherit;color:#1a1a1a}
+.field-input:focus{border-color:#93c5fd}
+.field-input:disabled{background:var(--surface);color:#9ca3af;cursor:not-allowed}
+.field-textarea{resize:vertical;min-height:68px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-hint{font-size:10px;color:#aaa;margin-top:1px}
+
+/* ═══════════════════════════════════════════════
+   ADMIN — KPI
+═══════════════════════════════════════════════ */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.kpi-card{background:#fff;border:.5px solid var(--border);border-radius:10px;padding:1rem;display:flex;flex-direction:column;gap:4px}
+.kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#999}
+.kpi-value{font-size:24px;font-weight:700;color:#1a1a1a;letter-spacing:-.5px}
+.kpi-sub{font-size:11px;color:#bbb}
+
+/* Toggle switch */
+.toggle-cell{display:flex;align-items:center;justify-content:center}
+.toggle-input{display:none}
+.toggle-label{width:36px;height:20px;background:#e5e7eb;border-radius:10px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle-input:checked + .toggle-label{background:var(--green)}
+.toggle-label::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle-input:checked + .toggle-label::after{transform:translateX(16px)}
+
+/* Checkbox — ciblé uniquement sur .cb-cell pour ne pas écraser les toggles */
+.cb-cell{width:36px;text-align:center}
+.cb-cell input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:var(--blue)}
+/* toggle-input reste caché — priorité explicite pour éviter conflit */
+.toggle-input{display:none!important}
+
+/* Admin sections */
+.admin-sections{display:flex;flex-direction:column;gap:1.25rem}
+.admin-section{background:#fff;border:.5px solid var(--border);border-radius:10px;overflow:hidden}
+.admin-section-header{padding:.85rem 1rem;border-bottom:.5px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:8px}
+.admin-section-title{font-size:13px;font-weight:600;flex:1}
+.admin-section-body{padding:1rem;display:flex;flex-direction:column;gap:.85rem}
+
+/* Choix modes initialisation */
+.mode-tabs{display:flex;gap:0;border:.5px solid var(--border);border-radius:8px;overflow:hidden}
+.mode-tab{flex:1;padding:8px 10px;text-align:center;font-size:12px;font-weight:500;color:#888;cursor:pointer;transition:all .13s;border-right:.5px solid var(--border);background:#fff}
+.mode-tab:last-child{border-right:none}
+.mode-tab.active{background:var(--blue);color:#fff}
+.mode-tab:hover:not(.active){background:var(--surface)}
+.mode-content{display:none;flex-direction:column;gap:.75rem}
+.mode-content.active{display:flex}
+
+/* Methode mapping table */
+.methode-table{width:100%;border-collapse:collapse;font-size:12px}
+.methode-table th{text-align:center;padding:6px 8px;background:var(--surface);border:.5px solid var(--border);font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em}
+.methode-table th:first-child{text-align:left}
+.methode-table td{padding:7px 8px;border:.5px solid var(--border);text-align:center;vertical-align:middle}
+.methode-table td:first-child{text-align:left;font-weight:500;color:#374151}
+.methode-table tr:hover td{background:#fafaf8}
+</style>
+</head>
+<body>
+
+<!-- ═════════════════════════════════════════
+     ÉCRAN LOGIN
+═════════════════════════════════════════ -->
+<div id="screen-login">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-brand-icon">📋</div>
+      <div>
+        <div class="login-brand-name">My'Apping</div>
+        <div class="login-brand-sub">Cahier Référentiels Sociétés Dédiées · SNCF · MDM v2.4</div>
+      </div>
+    </div>
+    <div class="ldiv"></div>
+    <div class="login-fields">
+      <div class="login-field-group">
+        <label>Adresse email</label>
+        <input class="login-input" id="login-email" type="email" placeholder="prenom.nom@sncf.fr" autocomplete="username" />
+      </div>
+      <div class="login-field-group">
+        <label>Mot de passe</label>
+        <input class="login-input" id="login-pwd" type="password" placeholder="••••••••" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+    </div>
+    <div class="login-error" id="login-error">Identifiants incorrects ou accès non autorisé.</div>
+    <div class="login-spinner" id="login-spinner"><div class="ls"></div> Connexion en cours…</div>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Continuer</button>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════════
+     ÉCRAN UTILISATEUR SD
+═════════════════════════════════════════ -->
+<div id="screen-sd">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sb-sd">
+    <div class="sb-brand">
+      <div class="sb-brand-icon">📋</div>
+      <div class="sb-brand-text">
+        <div class="sb-brand-name">My'Apping</div>
+        <div class="sb-brand-ver">MDM · v2.4</div>
+      </div>
+    </div>
+    <div class="sb-section">Navigation</div>
+    <div class="sb-item" id="sd-nav-dashboard" onclick="sdNav('dashboard')">
+      <span class="sb-item-icon">⊞</span><span class="sb-label">Dashboard</span>
+    </div>
+    <div class="sb-item active" id="sd-nav-briques" onclick="sdNav('briques')">
+      <span class="sb-item-icon">📋</span><span class="sb-label">Cahier des Briques</span>
+    </div>
+    <div class="sb-item" id="sd-nav-mapcrd" onclick="sdNav('mapcrd')">
+      <span class="sb-item-icon">→</span><span class="sb-label">Mapping CRD</span>
+    </div>
+    <div class="sb-footer">
+      <!-- Toggle admin — visible seulement si l'utilisateur a le droit ADMIN -->
+      <div class="sb-admin-toggle" id="sb-admin-toggle" style="display:none" onclick="switchToAdmin()">
+        <div class="toggle-sw" id="admin-toggle-sw-sd"></div>
+        <span class="sb-admin-toggle-label">Espace Admin</span>
+      </div>
+      <div class="sb-user" onclick="logout()">
+        <div class="sb-user-avatar" id="sb-sd-avatar">CM</div>
+        <div class="sb-user-info">
+          <div class="sb-user-name" id="sb-sd-name">C. Mercier</div>
+          <div class="sb-user-role" id="sb-sd-role">Utilisateur SD</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN SD -->
+  <div class="app-main">
+    <div class="topbar">
+      <button class="topbar-collapse-btn" onclick="toggleSidebar('sd')" title="Replier/déplier le menu">☰</button>
+      <div class="topbar-title-group">
+        <div class="topbar-title" id="sd-page-title">Cahier des Briques</div>
+        <div class="topbar-sub" id="sd-page-sub">Référentiel hiérarchique à 3 niveaux normalisés</div>
+      </div>
+      <div class="topbar-right">
+        <span class="ctx-label">Cahier · Exercice</span>
+        <select class="ctx-select" id="ctx-cahier-sel" onchange="onCahierChange()"></select>
+        <div class="tb-user-btn" onclick="logout()">
+          <div class="tb-avatar" id="tb-sd-avatar">CM</div>
+          <span id="tb-sd-name">C. Mercier</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT BRIQUES -->
+    <div class="content" id="sd-content-briques">
+      <div class="filters-bar">
+        <div class="search-wrap">
+          <span class="search-ico">🔍</span>
+          <input type="text" id="search-input" placeholder="Libellés Niv1/Niv2/Niv3, Niv0, ID complet..." oninput="onSearch(this.value)" />
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span style="font-size:11px;color:#999;font-weight:500">NIVEAU 1</span>
+          <select class="fsel" id="fil-n1" onchange="onN1FilterChange()">
+            <option value="">tous</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span style="font-size:11px;color:#999;font-weight:500">NIVEAU 2</span>
+          <select class="fsel" id="fil-n2" onchange="applyFilters()">
+            <option value="">tous</option>
+          </select>
+        </div>
+        <button class="btn primary" onclick="openModalNew()">+ Nouvelle brique</button>
+        <button class="btn ghost" onclick="exportCsv()">Exporter Excel</button>
+      </div>
+
+      <div class="dupe-banner" id="dupe-banner">⚠ <span id="dupe-msg">Doublon d'ordre détecté.</span></div>
+
+      <div class="status-bar">
+        <span id="status-spinner" style="display:none"><span class="spinner"></span></span>
+        <span id="status-text">—</span>
+      </div>
+
+      <div class="data-table-wrap">
+        <table class="data-table" id="briques-table">
+          <thead>
+            <tr>
+              <th style="width:28px"></th>
+              <th style="width:86px">NIV0</th>
+              <th style="width:140px">ID COMPLET</th>
+              <th class="sortable" style="width:48px" onclick="sortCol('n1_ordre')" id="th-n1">NIV 1 <span class="sort-icon none" id="si-n1"></span></th>
+              <th class="sortable" onclick="sortCol('n1_lib')" id="th-cat">CATÉGORIE P&L <span class="sort-icon none" id="si-cat"></span></th>
+              <th class="sortable" style="width:48px" onclick="sortCol('n2_ordre')" id="th-n2">NIV 2 <span class="sort-icon none" id="si-n2"></span></th>
+              <th class="sortable" onclick="sortCol('n2_lib')" id="th-theme">THÈME P&L <span class="sort-icon none" id="si-theme"></span></th>
+              <th class="sortable" style="width:48px" onclick="sortCol('n3_ordre')" id="th-n3">NIV 3 <span class="sort-icon none" id="si-n3"></span></th>
+              <th class="sortable" onclick="sortCol('n3_lib')" id="th-sous">SOUS-THÈME P&L <span class="sort-icon none" id="si-sous"></span></th>
+              <th>COMMENTAIRES</th>
+              <th style="width:60px"></th>
+            </tr>
+          </thead>
+          <tbody id="briques-body"></tbody>
+        </table>
+      </div>
+
+      <div class="bottom-bar">
+        <span id="bottom-count">—</span>
+        <span style="margin-left:auto;display:flex;gap:10px">
+          <span><span class="kbd">⇧N</span> nouvelle brique</span>
+          <span><span class="kbd">⌘E</span> export</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="content hidden" id="sd-content-dashboard">
+      <div style="color:#bbb;text-align:center;padding:3rem;font-size:13px">Dashboard — à venir</div>
+    </div>
+    <div class="content hidden" id="sd-content-mapcrd">
+      <div style="color:#bbb;text-align:center;padding:3rem;font-size:13px">Mapping CRD — à venir</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════════
+     ÉCRAN ADMIN
+═════════════════════════════════════════ -->
+<div id="screen-admin">
+
+  <!-- SIDEBAR ADMIN -->
+  <div class="sidebar" id="sb-admin">
+    <div class="sb-brand">
+      <div class="sb-brand-icon">⚙️</div>
+      <div class="sb-brand-text">
+        <div class="sb-brand-name">My'Apping</div>
+        <div class="sb-brand-ver">Administration</div>
+      </div>
+    </div>
+    <div class="sb-section">Admin</div>
+    <div class="sb-item active" id="admin-nav-dashboard" onclick="adminNav('dashboard')">
+      <span class="sb-item-icon">📊</span><span class="sb-label">Dashboard Admin</span>
+    </div>
+    <div class="sb-item" id="admin-nav-cahiers" onclick="adminNav('cahiers')">
+      <span class="sb-item-icon">📋</span><span class="sb-label">Gestion des cahiers</span>
+    </div>
+    <div class="sb-item" id="admin-nav-droits" onclick="adminNav('droits')">
+      <span class="sb-item-icon">🔑</span><span class="sb-label">Droits d'accès</span>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-admin-toggle" onclick="switchToSd()">
+        <div class="toggle-sw on" id="admin-toggle-sw-admin"></div>
+        <span class="sb-admin-toggle-label">Espace Admin</span>
+      </div>
+      <div class="sb-user" onclick="logout()">
+        <div class="sb-user-avatar" id="sb-admin-avatar">CM</div>
+        <div class="sb-user-info">
+          <div class="sb-user-name" id="sb-admin-name">C. Mercier</div>
+          <div class="sb-user-role">Administrateur</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN ADMIN -->
+  <div class="app-main">
+    <div class="topbar">
+      <button class="topbar-collapse-btn" onclick="toggleSidebar('admin')" title="Replier/déplier le menu">☰</button>
+      <div class="topbar-title-group">
+        <div class="topbar-title" id="admin-page-title">Dashboard Admin</div>
+        <div class="topbar-sub" id="admin-page-sub">Vue globale des cahiers et exercices</div>
+      </div>
+      <div class="topbar-right">
+        <div class="tb-user-btn" onclick="logout()">
+          <div class="tb-avatar" id="tb-admin-avatar">CM</div>
+          <span id="tb-admin-name">C. Mercier</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD ADMIN -->
+    <div class="content" id="admin-content-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Dernière mise à jour</div>
+          <div class="kpi-value" id="kpi-lastupdate">—</div>
+          <div class="kpi-sub">Modification cahier</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Exercices actifs</div>
+          <div class="kpi-value" id="kpi-exercices">—</div>
+          <div class="kpi-sub">Tous SD confondus</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Sociétés Dédiées</div>
+          <div class="kpi-value" id="kpi-sds">—</div>
+          <div class="kpi-sub">SD enregistrées</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Briques totales</div>
+          <div class="kpi-value" id="kpi-briques">—</div>
+          <div class="kpi-sub">Tous cahiers confondus</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-title">Table des exercices</div>
+          <select class="fsel" id="admin-fil-sd" onchange="renderAdminTable()">
+            <option value="">Toutes les SD</option>
+          </select>
+          <select class="fsel" id="admin-fil-ex" onchange="renderAdminTable()">
+            <option value="">Tous exercices</option>
+          </select>
+          <button class="btn danger sm" onclick="archiverTous()">Archiver sélection</button>
+        </div>
+        <div class="data-table-wrap" style="border-radius:0;border:none;border-top:.5px solid var(--border)">
+          <table class="data-table" id="admin-ex-table">
+            <thead>
+              <tr>
+                <th class="cb-cell"><input type="checkbox" id="cb-all" onchange="toggleAllCb(this)"/></th>
+                <th>SD</th>
+                <th>Nom cahier</th>
+                <th>Exercice</th>
+                <th>Statut</th>
+                <th>Archiver</th>
+              </tr>
+            </thead>
+            <tbody id="admin-ex-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- GESTION CAHIERS -->
+    <div class="content hidden" id="admin-content-cahiers">
+      <div class="admin-sections">
+
+        <!-- Ouvrir exercice -->
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <span style="font-size:16px">📅</span>
+            <div class="admin-section-title">Ouvrir une nouvelle année d'exercice</div>
+          </div>
+          <div class="admin-section-body" style="flex-direction:row;align-items:flex-end;gap:10px">
+            <div class="field-group" style="flex:1;max-width:180px">
+              <label>Année</label>
+              <input class="field-input" id="new-annee" type="number" min="2024" max="2035" placeholder="2027" />
+            </div>
+            <button class="btn primary" onclick="ouvrirExercice()">Valider</button>
+          </div>
+        </div>
+
+        <!-- Ouvrir cahier -->
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <span style="font-size:16px">📋</span>
+            <div class="admin-section-title">Ouvrir un nouveau cahier</div>
+          </div>
+          <div class="admin-section-body">
+            <div class="mode-tabs">
+              <div class="mode-tab active" onclick="setMode('dupliquer')">Dupliquer N-1 → N</div>
+              <div class="mode-tab" onclick="setMode('copier')">Copie depuis modèle SD</div>
+              <div class="mode-tab" onclick="setMode('vierge')">Créer vierge</div>
+            </div>
+
+            <!-- Mode: dupliquer -->
+            <div class="mode-content active" id="mode-dupliquer">
+              <div class="field-row">
+                <div class="field-group">
+                  <label>Sélectionner une SD</label>
+                  <select class="field-input" id="dup-sd"><option value="">— SD —</option></select>
+                </div>
+                <div class="field-group">
+                  <label>Sélectionner un exercice (N-1)</label>
+                  <select class="field-input" id="dup-ex"><option value="">— Exercice —</option></select>
+                </div>
+              </div>
+              <div><button class="btn success" onclick="lancerMode('dupliquer')">▶ Lancer la reprise N-1 → N</button></div>
+            </div>
+
+            <!-- Mode: copier -->
+            <div class="mode-content" id="mode-copier">
+              <div class="field-row">
+                <div class="field-group">
+                  <label>SD de destination</label>
+                  <select class="field-input" id="cop-sd-dest"><option value="">— SD —</option></select>
+                </div>
+                <div class="field-group">
+                  <label>Exercice de destination</label>
+                  <select class="field-input" id="cop-ex-dest"><option value="">— Exercice —</option></select>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field-group">
+                  <label>Modèle SD source</label>
+                  <select class="field-input" id="cop-sd-src"><option value="">— SD modèle —</option></select>
+                </div>
+                <div class="field-group">
+                  <label>Modèle Exercice source</label>
+                  <select class="field-input" id="cop-ex-src"><option value="">— Exercice modèle —</option></select>
+                </div>
+              </div>
+              <div><button class="btn success" onclick="lancerMode('copier')">▶ Dupliquer depuis modèle</button></div>
+            </div>
+
+            <!-- Mode: vierge -->
+            <div class="mode-content" id="mode-vierge">
+              <div class="field-row">
+                <div class="field-group">
+                  <label>Sélectionner une SD</label>
+                  <select class="field-input" id="vierge-sd"><option value="">— SD —</option></select>
+                </div>
+                <div class="field-group">
+                  <label>Sélectionner un exercice</label>
+                  <select class="field-input" id="vierge-ex"><option value="">— Exercice —</option></select>
+                </div>
+              </div>
+              <div><button class="btn primary" onclick="lancerMode('vierge')">▶ Créer exercice vierge</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Méthodes de mapping -->
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <span style="font-size:16px">🗺</span>
+            <div class="admin-section-title">Méthodes de mapping par SD</div>
+          </div>
+          <div class="admin-section-body" style="padding:0">
+            <div class="data-table-wrap" style="border-radius:0;border:none">
+              <table class="methode-table" id="methode-table"></table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- DROITS D'ACCÈS -->
+    <div class="content hidden" id="admin-content-droits">
+      <div class="admin-sections">
+
+        <!-- Ajouter -->
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <span style="font-size:16px">➕</span>
+            <div class="admin-section-title">Ajouter une habilitation</div>
+          </div>
+          <div class="admin-section-body">
+            <!-- Bloc SD_USER -->
+            <div style="background:var(--blue-light);border:.5px solid #bfdbfe;border-radius:8px;padding:.75rem 1rem;margin-bottom:.25rem">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#1d4ed8;margin-bottom:.6rem">Accès SD_USER</div>
+              <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
+                <div class="field-group" style="min-width:150px">
+                  <label>SD</label>
+                  <select class="field-input" id="add-droit-sd"><option value="">— SD —</option></select>
+                </div>
+                <div class="field-group" style="flex:1;min-width:200px">
+                  <label>Adresse email</label>
+                  <input class="field-input" id="add-droit-email" type="email" placeholder="prenom.nom@sncf.fr"/>
+                </div>
+                <button class="btn primary" onclick="ajouterDroit('SD_USER')">Valider</button>
+              </div>
+            </div>
+            <!-- Bloc ADMIN -->
+            <div style="background:#faf5ff;border:.5px solid #ddd6fe;border-radius:8px;padding:.75rem 1rem">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6d28d9;margin-bottom:.35rem">Accès ADMIN</div>
+              <div style="font-size:11px;color:#888;margin-bottom:.6rem">Le rôle Admin donne accès à toutes les SD sans restriction.</div>
+              <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
+                <div class="field-group" style="flex:1;min-width:200px">
+                  <label>Adresse email</label>
+                  <input class="field-input" id="add-droit-email-admin" type="email" placeholder="prenom.nom@sncf.fr"/>
+                </div>
+                <button class="btn" style="background:#faf5ff;border-color:#ddd6fe;color:#6d28d9" onclick="ajouterDroit('ADMIN')">Valider</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Supprimer -->
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <span style="font-size:16px">🔑</span>
+            <div class="admin-section-title">Gérer les accès</div>
+            <select class="fsel" id="droits-fil-sd" onchange="renderDroitsTable()">
+              <option value="">Tous</option>
+            </select>
+            <select class="fsel" id="droits-fil-role" onchange="renderDroitsTable()">
+              <option value="">Tous les rôles</option>
+              <option value="SD_USER">SD_USER</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          </div>
+          <div class="data-table-wrap" style="border-radius:0;border:none;border-top:.5px solid var(--border)">
+            <table class="data-table" id="droits-table">
+              <thead>
+                <tr>
+                  <th>SD</th>
+                  <th>Email</th>
+                  <th>Rôle</th>
+                  <th style="width:80px">Action</th>
+                </tr>
+              </thead>
+              <tbody id="droits-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- NOTIF -->
+<div id="notif" class="notif"><span id="notif-msg"></span></div>
+
+<!-- MODAL NOUVELLE BRIQUE -->
+<div class="modal-overlay" id="modal-new" onclick="if(event.target===this)closeModalNew()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><span id="mn-title">Ajouter une brique · Niveau 1</span><button class="close-btn" onclick="closeModalNew()">✕</button></h3>
+      <div class="modal-sub" id="mn-sub">Nouvelle catégorie P&L à la racine du cahier.</div>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aaa;margin-bottom:6px">Niveau à créer</div>
+        <div class="niveau-selector">
+          <button class="niveau-btn active" id="nbtn-1" onclick="setNiveau(1)">Niveau 1</button>
+          <button class="niveau-btn" id="nbtn-2" onclick="setNiveau(2)">Niveau 2</button>
+          <button class="niveau-btn" id="nbtn-3" onclick="setNiveau(3)">Niveau 3</button>
+        </div>
+      </div>
+      <div class="id-calc-box">
+        <div class="id-calc-label">ID Calculé</div>
+        <div class="id-calc-value" id="id-calc">—</div>
+        <div class="id-calc-hint">SD · Exercice · Ordre N1 · Ordre N2 · Ordre N3</div>
+      </div>
+
+      <!-- N1 -->
+      <div id="sect-n1">
+        <div class="ref-block">
+          <div class="ref-block-header"><span class="ref-block-title">Niveaux 1 existants</span><span class="ref-block-badge">Référence · Lecture seule</span></div>
+          <input class="ref-search" id="rs-n1" type="text" placeholder="Rechercher dans les codes et libellés existants..." oninput="filterRef('n1',this.value)"/>
+          <div class="ref-list" id="rl-n1"></div>
+        </div>
+        <div class="field-group" style="margin-top:10px"><label>Libellé Niveau 1 · catégorie P&L</label><input class="field-input" id="fn1-lib" placeholder="Ex. Charges de Structure"/></div>
+        <div class="field-row" style="margin-top:10px">
+          <div class="field-group"><label>Ordre N1</label><input class="field-input" id="fn1-ordre" placeholder="04"/></div>
+          <div class="field-group"><label>Référentiel admin · hérité</label><input class="field-input" id="fn1-niv0" disabled/></div>
+        </div>
+      </div>
+
+      <!-- N2 -->
+      <div id="sect-n2" style="display:none">
+        <div class="parent-row one">
+          <div class="parent-group"><label>Parent Niveau 1</label>
+            <select id="fn2-pn1" onchange="onN2P1Change()"><option value="">— Sélectionner —</option></select>
+          </div>
+        </div>
+        <div class="ref-block" style="margin-top:10px">
+          <div class="ref-block-header"><span class="ref-block-title">Niveaux 2 existants sous ce Niveau 1</span><span class="ref-block-badge">Référence · Lecture seule</span></div>
+          <input class="ref-search" id="rs-n2" type="text" placeholder="Rechercher dans les codes et libellés existants..." oninput="filterRef('n2',this.value)"/>
+          <div class="ref-list" id="rl-n2"><div class="ref-empty">Sélectionner un Niveau 1</div></div>
+        </div>
+        <div class="field-group" style="margin-top:10px"><label>Libellé Niveau 2 · thème P&L</label><input class="field-input" id="fn2-lib" placeholder="Ex. Sous-charge RH"/></div>
+        <div class="field-row" style="margin-top:10px">
+          <div class="field-group"><label>Ordre N2</label><input class="field-input" id="fn2-ordre" placeholder="02"/></div>
+          <div class="field-group"><label>Référentiel admin · hérité</label><input class="field-input" id="fn2-niv0" disabled/></div>
+        </div>
+      </div>
+
+      <!-- N3 -->
+      <div id="sect-n3" style="display:none">
+        <div class="parent-row two">
+          <div class="parent-group"><label>Parent Niveau 1</label>
+            <select id="fn3-pn1" onchange="onN3P1Change()"><option value="">— Sélectionner —</option></select>
+          </div>
+          <div class="parent-group"><label>Parent Niveau 2</label>
+            <select id="fn3-pn2" disabled onchange="onN3P2Change()"><option value="">— Choisir N1 d'abord —</option></select>
+          </div>
+        </div>
+        <div class="field-group" style="margin-top:10px"><label>Libellé Niveau 3 · sous-thème P&L</label><input class="field-input" id="fn3-lib" placeholder="Ex. Abonnement Cloud"/></div>
+        <div class="field-row" style="margin-top:10px">
+          <div class="field-group"><label>Ordre N3</label><input class="field-input" id="fn3-ordre" placeholder="004"/></div>
+          <div class="field-group"><label>Référentiel admin · hérité</label><input class="field-input" id="fn3-niv0" disabled/></div>
+        </div>
+        <div class="field-group" style="margin-top:10px"><label>Commentaire</label>
+          <textarea class="field-input field-textarea" id="fn3-comment" placeholder="Contexte, règle de rattachement, décision de gouvernance..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-kbd"><span class="kbd">⌘↵</span> enregistrer</div>
+      <div class="modal-footer-btns">
+        <button class="btn ghost" onclick="closeModalNew()">Annuler</button>
+        <button class="btn primary" onclick="saveNiveau()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ÉDITION BRIQUE N3 -->
+<div class="modal-overlay" id="modal-edit" onclick="if(event.target===this)closeModalEdit()">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <h3><span>Modifier la brique</span><button class="close-btn" onclick="closeModalEdit()">✕</button></h3>
+      <div class="modal-sub" id="me-id-display" style="font-family:monospace;color:var(--blue);font-size:12px;margin-top:4px">—</div>
+    </div>
+    <div class="modal-body">
+      <!-- N1 et N2 éditables en cascade -->
+      <div class="parent-row two">
+        <div class="parent-group">
+          <label>Catégorie P&L (N1)</label>
+          <select id="me-n1-sel" onchange="onEditN1Change()">
+            <option value="">— Sélectionner —</option>
+          </select>
+        </div>
+        <div class="parent-group">
+          <label>Thème P&L (N2)</label>
+          <select id="me-n2-sel" disabled>
+            <option value="">— Choisir N1 d'abord —</option>
+          </select>
+        </div>
+      </div>
+      <!-- Libellé N3 -->
+      <div class="field-group">
+        <label>Libellé Niveau 3 · sous-thème P&L</label>
+        <input class="field-input" id="me-lib" placeholder="Libellé du sous-thème"/>
+      </div>
+      <!-- Ordre + Niv0 -->
+      <div class="field-row">
+        <div class="field-group">
+          <label>Ordre N3</label>
+          <input class="field-input" id="me-ordre" type="text"/>
+          <div class="field-hint" id="me-ordre-hint" style="color:var(--red);display:none">⚠ Doublon d'ordre détecté</div>
+        </div>
+        <div class="field-group">
+          <label>Niv0 (hérité)</label>
+          <input class="field-input" id="me-niv0" disabled/>
+        </div>
+      </div>
+      <!-- Commentaire -->
+      <div class="field-group">
+        <label>Commentaire</label>
+        <textarea class="field-input field-textarea" id="me-comment" placeholder="Contexte, règle de rattachement, décision de gouvernance..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-kbd"><span class="kbd">⌘↵</span> enregistrer</div>
+      <div class="modal-footer-btns">
+        <button class="btn ghost" onclick="closeModalEdit()">Annuler</button>
+        <button class="btn primary" onclick="saveEdit()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const CFG = {
+  SP_SITE: "https://sncf.sharepoint.com/sites/ReporTER/mapping",
+  DEMO_MODE: false,  // passer a false apres validation cookie SP
+
+  // Noms exacts des listes SharePoint (sensibles a la casse)
+  LISTS: {
+    ref_sd:'ref_sd', ref_exercice:'ref_exercice', sd_exercice:'sd_exercice',
+    droits_acces:'droits_acces', ref_n1:'ref_n1', ref_n2:'ref_n2', ref_n3:'ref_n3',
+  },
+
+  // Mapping colonnes SP reelles vers noms internes
+  // Adapter ici si les noms de colonnes changent dans SP — le reste du code ne change pas
+  COLS:{
+    ref_sd:{
+      id:'Id', code_sd:'Code', lib_sd:'Libelle', code_bu:'CodeBU'
+    },
+    ref_exercice:{
+      id:'Id',
+      annee:'exercice',    // colonne SP : exercice (texte)
+      statut:'est_actif'   // colonne SP : est_actif (Oui/Non)
+    },
+    sd_exercice:{
+      id:'Id',
+      fk_id_sd:'fk_sdId',            // Lookup ref_sd  -> suffixe Id
+      fk_id_exercice:'fk_exerciceId', // Lookup ref_exercice -> suffixe Id
+      fk_id_source:'fk_id_sourceId', // Lookup self -> suffixe Id
+      statut:'statut'                 // Choices
+    },
+    droits_acces:{
+      id:'Id',
+      fk_id_sd:'fk_sdId',   // Lookup ref_sd -> suffixe Id
+      id_entra:'id_entra',  // Person -> expand EMail
+      role:'role'           // Choices
+    },
+    ref_n1:{
+      id:'Id',
+      fk_id_sd_exercice:'fk_sd_exerciceId', // Lookup sd_exercice -> suffixe Id
+      lib_n1:'lib_n1',
+      ordre_n1:'ordre_n1'   // Texte -> parseInt cote JS
+    },
+    ref_n2:{
+      id:'Id',
+      fk_id_n1:'fk_ref_n1Id', // Lookup ref_n1 -> suffixe Id
+      lib_n2:'lib_n2',
+      ordre_n2:'ordre_n2'
+    },
+    ref_n3:{
+      id:'Id',
+      fk_id_n2:'fk_ref_n2Id', // Lookup ref_n2 -> suffixe Id
+      lib_n3:'lib_n3',
+      ordre_n3:'ordre_n3',
+      id_complet:'id_complet',
+      commentaire:'commentaire'
+    },
+  }
+};
+
+/* ============================================================
+   MOCK DATA
+   ============================================================ */
+const MOCK = {
+  users: [
+    { email:'c.mercier@sncf.fr', pwd:'demo', name:'C. Mercier', initiales:'CM' },
+    { email:'admin@sncf.fr',     pwd:'admin', name:'A. Martin', initiales:'AM' },
+  ],
+  ref_sd: [
+    { id_sd:1, code_sd:'SVEA' },
+    { id_sd:2, code_sd:'SVEA-CRN' },
+    { id_sd:3, code_sd:'SD-ARA' },
+  ],
+  ref_exercice: [
+    { id_exercice:1, annee:2024, statut:false },
+    { id_exercice:2, annee:2025, statut:true },
+    { id_exercice:3, annee:2026, statut:true },
+  ],
+  sd_exercice: [
+    { id:1, fk_id_sd:1, fk_id_exercice:2, statut:'Actif',   fk_id_source:null, last_update:'2026-08-14' },
+    { id:2, fk_id_sd:1, fk_id_exercice:3, statut:'Actif',   fk_id_source:null, last_update:'2026-08-19' },
+    { id:3, fk_id_sd:2, fk_id_exercice:3, statut:'Actif',   fk_id_source:1,    last_update:'2026-08-10' },
+    { id:4, fk_id_sd:3, fk_id_exercice:3, statut:'Archivé', fk_id_source:null, last_update:'2026-07-30' },
+  ],
+  droits_acces_sd: [
+    { id:1, fk_id_sd:1, id_entra:'c.mercier@sncf.fr', role:'SD_USER' },
+    { id:2, fk_id_sd:2, id_entra:'c.mercier@sncf.fr', role:'SD_USER' },
+    { id:3, fk_id_sd:1, id_entra:'admin@sncf.fr',     role:'ADMIN'   },
+    { id:4, fk_id_sd:2, id_entra:'admin@sncf.fr',     role:'ADMIN'   },
+    { id:5, fk_id_sd:3, id_entra:'admin@sncf.fr',     role:'ADMIN'   },
+  ],
+  ref_n1: [
+    { id_n1:1, fk_id_sd_exercice:2, lib_n1:'Produits d\'exploitation', ordre_n1:'1' },
+    { id_n1:2, fk_id_sd_exercice:2, lib_n1:'Charges de Structure',     ordre_n1:'2' },
+    { id_n1:3, fk_id_sd_exercice:2, lib_n1:'Charges Techniques',       ordre_n1:'3' },
+  ],
+  ref_n2: [
+    { id_n2:1, fk_id_n1:1, lib_n2:'Primes acquises',        ordre_n2:'1' },
+    { id_n2:2, fk_id_n1:1, lib_n2:'Produits financiers',    ordre_n2:'2' },
+    { id_n2:3, fk_id_n1:2, lib_n2:'Sous-charge RH',         ordre_n2:'1' },
+    { id_n2:4, fk_id_n1:2, lib_n2:'Sous-charge IT',         ordre_n2:'3' },
+    { id_n2:5, fk_id_n1:2, lib_n2:'Sous-charge Immobilier', ordre_n2:'4' },
+    { id_n2:6, fk_id_n1:3, lib_n2:'Sinistres payés',        ordre_n2:'1' },
+    { id_n2:7, fk_id_n1:3, lib_n2:'Provisions techniques',  ordre_n2:'2' },
+  ],
+  ref_n3: [
+    { id_n3:1,  fk_id_n2:1, lib_n3:'Primes émises brutes',     ordre_n3:'1', niv0:'SVEA', commentaire:'Flux direct depuis CRD collecte' },
+    { id_n3:2,  fk_id_n2:1, lib_n3:'Variation PANE',           ordre_n3:'2', niv0:'SVEA', commentaire:'Calcul actuariel mensuel' },
+    { id_n3:3,  fk_id_n2:2, lib_n3:'Coupons obligataires',     ordre_n3:'1', niv0:'SVEA', commentaire:'' },
+    { id_n3:4,  fk_id_n2:3, lib_n3:'Salaires et traitements',  ordre_n3:'1', niv0:'SVEA', commentaire:'Clé ETP par SD' },
+    { id_n3:5,  fk_id_n2:3, lib_n3:'Charges patronales',       ordre_n3:'2', niv0:'SVEA', commentaire:'' },
+    { id_n3:6,  fk_id_n2:3, lib_n3:'Formation et recrutement', ordre_n3:'3', niv0:'SVEA', commentaire:'Refacturé au groupe' },
+    { id_n3:7,  fk_id_n2:4, lib_n3:'Abonnement Cloud',         ordre_n3:'1', niv0:'SVEA', commentaire:'Répartition au prorata des V' },
+    { id_n3:8,  fk_id_n2:4, lib_n3:'Licences SaaS',            ordre_n3:'2', niv0:'SVEA', commentaire:'Contrat cadre 2026-2028' },
+    { id_n3:9,  fk_id_n2:4, lib_n3:'Hébergement datacenter',   ordre_n3:'3', niv0:'SVEA', commentaire:'' },
+    { id_n3:10, fk_id_n2:5, lib_n3:'Loyers et charges',        ordre_n3:'1', niv0:'SVEA', commentaire:'' },
+    { id_n3:11, fk_id_n2:6, lib_n3:'Règlements bruts',         ordre_n3:'1', niv0:'SVEA', commentaire:'Alimenté par le CRD sinistre' },
+    { id_n3:12, fk_id_n2:6, lib_n3:'Recours encaissés',        ordre_n3:'2', niv0:'SVEA', commentaire:'' },
+    { id_n3:13, fk_id_n2:7, lib_n3:'Dotation PSAP',            ordre_n3:'1', niv0:'SVEA', commentaire:'Best estimate + marge de risque' },
+  ],
+  methodes: [
+    { id:1, lib:'Clé UG',        actif:true },
+    { id:2, lib:'Clé Fonction',  actif:true },
+    { id:3, lib:'Imputation dir.',actif:false },
+    { id:4, lib:'Historique N-1',actif:true },
+  ],
+  methode_sd: {
+    1: {1:true,  2:true,  3:false, 4:true },
+    2: {1:false, 2:true,  3:true,  4:false},
+    3: {1:true,  2:false, 3:false, 4:true },
+  }
+};
+
+/* ============================================================
+   SESSION
+   ============================================================ */
+const S = {
+  user: null,       // { email, name, initiales }
+  role: null,       // rôle dominant : 'ADMIN' | 'SD_USER'
+  droits: [],       // tous les droits de l'utilisateur
+  sdsAutorises: [], // SD accessibles
+  sdActive: null,   // SD courante (objet {id_sd, code_sd})
+  sdExActive: null, // sd_exercice actif
+  cahierNom: '',    // code SD actif pour Niv0
+};
+
+/* ============================================================
+   SP REST helpers (minimal — DEMO_MODE gère tout)
+   ============================================================ */
+async function spGet(list, params=''){
+  if(CFG.DEMO_MODE){ await delay(60); return MOCK[list]||[]; }
+  const r=await fetch(`${CFG.SP_SITE}/_api/web/lists/getbytitle('${list}')/items?${params}`,
+    {headers:{'Accept':'application/json;odata=verbose'},credentials:'include'});
+  return (await r.json()).d.results;
+}
+let _dig=null,_de=0;
+async function getDigest(){
+  if(_dig&&Date.now()<_de) return _dig;
+  if(CFG.DEMO_MODE){_dig='mock';_de=Date.now()+25*60000;return _dig;}
+  const r=await fetch(`${CFG.SP_SITE}/_api/contextinfo`,{method:'POST',headers:{'Accept':'application/json;odata=verbose'},credentials:'include'});
+  const d=await r.json(); _dig=d.d.GetContextWebInformation.FormDigestValue; _de=Date.now()+25*60000; return _dig;
+}
+const _ec={};
+async function eType(list){
+  if(_ec[list]) return _ec[list];
+  if(CFG.DEMO_MODE) return `SP.Data.${list}ListItem`;
+  const r=await fetch(`${CFG.SP_SITE}/_api/web/lists/getbytitle('${list}')?$select=ListItemEntityTypeFullName`,{headers:{'Accept':'application/json;odata=verbose'},credentials:'include'});
+  return _ec[list]=(await r.json()).d.ListItemEntityTypeFullName;
+}
+async function spPost(list,fields){
+  if(CFG.DEMO_MODE){await delay(80);return{...fields,Id:Date.now()};}
+  const dig=await getDigest(),type=await eType(list);
+  const r=await fetch(`${CFG.SP_SITE}/_api/web/lists/getbytitle('${list}')/items`,{method:'POST',headers:{'Accept':'application/json;odata=verbose','Content-Type':'application/json;odata=verbose','X-RequestDigest':dig},credentials:'include',body:JSON.stringify({__metadata:{type},...fields})});
+  return(await r.json()).d;
+}
+async function spMerge(list,id,fields){
+  if(CFG.DEMO_MODE){await delay(50);return;}
+  const dig=await getDigest(),type=await eType(list);
+  await fetch(`${CFG.SP_SITE}/_api/web/lists/getbytitle('${list}')/items(${id})`,{method:'POST',headers:{'Accept':'application/json;odata=verbose','Content-Type':'application/json;odata=verbose','X-RequestDigest':dig,'X-HTTP-Method':'MERGE','IF-MATCH':'*'},credentials:'include',body:JSON.stringify({__metadata:{type},...fields})});
+}
+async function spDelete(list,id){
+  if(CFG.DEMO_MODE){await delay(50);return;}
+  const dig=await getDigest();
+  await fetch(`${CFG.SP_SITE}/_api/web/lists/getbytitle('${list}')/items(${id})`,{method:'POST',headers:{'X-RequestDigest':dig,'X-HTTP-Method':'DELETE','IF-MATCH':'*'},credentials:'include'});
+}
+
+/* ============================================================
+   FONCTIONS METIER SP
+   ============================================================ */
+async function spGetCurrentUser(){
+  if(CFG.DEMO_MODE) return null;
+  const r=await fetch(`${CFG.SP_SITE}/_api/web/currentuser?$select=Title,Email`,
+    {headers:{'Accept':'application/json;odata=verbose'},credentials:'include'});
+  if(!r.ok) throw new Error('Session SP invalide ('+r.status+') — ouvrir le fichier depuis le domaine SharePoint');
+  const u=(await r.json()).d;
+  return {email:u.Email.toLowerCase(),name:u.Title,
+    initiales:u.Title.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()};
+}
+
+async function spEnsureUser(email){
+  if(CFG.DEMO_MODE) return {Id:Date.now(),LoginName:'i:0#.f|membership|'+email,Title:email};
+  const dig=await getDigest();
+  const r=await fetch(`${CFG.SP_SITE}/_api/web/ensureuser`,
+    {method:'POST',headers:{'Accept':'application/json;odata=verbose',
+     'Content-Type':'application/json;odata=verbose','X-RequestDigest':dig},
+     credentials:'include',body:JSON.stringify({logonName:'i:0#.f|membership|'+email})});
+  if(!r.ok) throw new Error('ensureUser '+email+' : '+r.status+' — verifier que l email existe dans le tenant');
+  return (await r.json()).d;
+}
+
+async function spGetDroits(email){
+  if(CFG.DEMO_MODE){
+    await delay(80);
+    return MOCK.droits_acces_sd.filter(d=>d.id_entra===email)
+      .map(d=>({id:d.id,fk_id_sd:d.fk_id_sd,role:d.role,email:d.id_entra}));
+  }
+  const C=CFG.COLS.droits_acces;
+  const enc=email.replace(/'/g,"''");
+  const filterVal=C.id_entra+"/EMail eq '"+enc+"'";
+  const selectVal="$select=Id,"+C.fk_id_sd+","+C.role+","+C.id_entra+"/EMail,"+C.id_entra+"/Title";
+  const expandVal="$expand="+C.id_entra;
+  const items=await spGet(CFG.LISTS.droits_acces,
+    selectVal+"&"+expandVal+"&$filter="+filterVal);
+  return items.map(d=>({
+    id:d.Id,fk_id_sd:d[C.fk_id_sd],role:d[C.role],
+    email:d[C.id_entra]?.EMail?.toLowerCase()||email
+  }));
+}
+async function spGetSds(){
+  if(CFG.DEMO_MODE){await delay(60);return MOCK.ref_sd;}
+  const C=CFG.COLS.ref_sd;
+  const items=await spGet(CFG.LISTS.ref_sd,
+    '$select='+C.id+','+C.code_sd+','+C.lib_sd+','+C.code_bu+'&$orderby='+C.code_sd+' asc');
+  return items.map(s=>({id_sd:s[C.id],code_sd:s[C.code_sd],lib_sd:s[C.lib_sd]||'',code_bu:s[C.code_bu]||''}));
+}
+
+async function spGetSdExercices(idSd, seulementActifs=true){
+  if(CFG.DEMO_MODE){
+    await delay(60);
+    let rows=MOCK.sd_exercice.filter(x=>x.fk_id_sd===idSd);
+    if(seulementActifs) rows=rows.filter(x=>x.statut==='Actif');
+    return rows.map(sx=>{
+      const ex=MOCK.ref_exercice.find(e=>e.id_exercice===sx.fk_id_exercice);
+      const sd=MOCK.ref_sd.find(s=>s.id_sd===sx.fk_id_sd);
+      return {...sx,annee:ex?.annee||'?',code_sd:sd?.code_sd||''};
+    });
+  }
+  const C=CFG.COLS.sd_exercice;
+  const Cs=CFG.COLS.ref_sd;
+  const Ce=CFG.COLS.ref_exercice;
+  let filter=C.fk_id_sd+" eq "+idSd;
+  if(seulementActifs) filter+=" and "+C.statut+" eq 'Actif'";
+  const sel="$select=Id,"+C.fk_id_sd+","+C.fk_id_exercice+","+C.fk_id_source+","+C.statut+",Modified,"+
+    "fk_sd/"+Cs.code_sd+",fk_exercice/"+Ce.annee;
+  const items=await spGet(CFG.LISTS.sd_exercice, sel+"&$expand=fk_sd,fk_exercice&$filter="+filter);
+  return items.map(x=>({
+    id:x.Id, fk_id_sd:x[C.fk_id_sd], fk_id_exercice:x[C.fk_id_exercice],
+    fk_id_source:x[C.fk_id_source]||null, statut:x[C.statut],
+    code_sd:x.fk_sd?.[Cs.code_sd]||'',
+    annee:x.fk_exercice?.[Ce.annee]||'?',
+    last_update:x.Modified?.substring(0,10)||''
+  }));
+}
+async function spGetN1(idSdExercice){
+  if(CFG.DEMO_MODE){await delay(60);return MOCK.ref_n1.filter(x=>x.fk_id_sd_exercice===idSdExercice);}
+  const C=CFG.COLS.ref_n1;
+  const items=await spGet(CFG.LISTS.ref_n1,
+    '$select=Id,'+C.fk_id_sd_exercice+','+C.lib_n1+','+C.ordre_n1+
+    '&$filter='+C.fk_id_sd_exercice+' eq '+idSdExercice+'&$orderby='+C.ordre_n1+' asc');
+  return items.map(x=>({id_n1:x.Id,fk_id_sd_exercice:x[C.fk_id_sd_exercice],lib_n1:x[C.lib_n1],ordre_n1:x[C.ordre_n1]}));
+}
+
+async function spGetN2(n1Ids){
+  if(CFG.DEMO_MODE){await delay(60);return MOCK.ref_n2.filter(x=>n1Ids.includes(x.fk_id_n1));}
+  if(!n1Ids.length) return [];
+  const C=CFG.COLS.ref_n2;
+  const filter=n1Ids.map(id=>C.fk_id_n1+' eq '+id).join(' or ');
+  const items=await spGet(CFG.LISTS.ref_n2,
+    '$select=Id,'+C.fk_id_n1+','+C.lib_n2+','+C.ordre_n2+
+    '&$filter='+filter+'&$orderby='+C.ordre_n2+' asc');
+  return items.map(x=>({id_n2:x.Id,fk_id_n1:x[C.fk_id_n1],lib_n2:x[C.lib_n2],ordre_n2:x[C.ordre_n2]}));
+}
+
+async function spGetN3(n2Ids){
+  if(CFG.DEMO_MODE){await delay(60);return MOCK.ref_n3.filter(x=>n2Ids.includes(x.fk_id_n2));}
+  if(!n2Ids.length) return [];
+  const C=CFG.COLS.ref_n3;
+  const filter=n2Ids.map(id=>C.fk_id_n2+' eq '+id).join(' or ');
+  const items=await spGet(CFG.LISTS.ref_n3,
+    '$select=Id,'+C.fk_id_n2+','+C.lib_n3+','+C.ordre_n3+','+C.id_complet+','+C.commentaire+
+    '&$filter='+filter+'&$orderby='+C.ordre_n3+' asc');
+  return items.map(x=>({
+    id_n3:x.Id,fk_id_n2:x[C.fk_id_n2],lib_n3:x[C.lib_n3],ordre_n3:x[C.ordre_n3],
+    code_complet:x[C.id_complet]||'',niv0:'',commentaire:x[C.commentaire]||''
+  }));
+}
+
+async function spPostDroit(email,role,idSd=null){
+  if(CFG.DEMO_MODE){await delay(80);return {Id:Date.now(),fk_id_sd:idSd,id_entra:email,role};}
+  const spUser=await spEnsureUser(email);
+  const C=CFG.COLS.droits_acces;
+  const fields={[C.role]:role,[C.id_entra+'Id']:spUser.Id};
+  if(idSd) fields[C.fk_id_sd]=idSd;
+  return await spPost(CFG.LISTS.droits_acces,fields);
+}
+
+async function spGetAllDroits(){
+  if(CFG.DEMO_MODE){
+    await delay(80);
+    return MOCK.droits_acces_sd.map(d=>{
+      const sd=MOCK.ref_sd.find(s=>s.id_sd===d.fk_id_sd);
+      return {...d,code_sd:sd?.code_sd||'Toutes',name:d.id_entra};
+    });
+  }
+  const C=CFG.COLS.droits_acces;
+  const Cs=CFG.COLS.ref_sd;
+  const sel="$select=Id,"+C.fk_id_sd+","+C.role+","+C.id_entra+"/EMail,"+C.id_entra+"/Title,fk_sd/"+Cs.code_sd;
+  const exp="$expand="+C.id_entra+",fk_sd";
+  const items=await spGet(CFG.LISTS.droits_acces, sel+"&"+exp);
+  return items.map(d=>({
+    id:d.Id,fk_id_sd:d[C.fk_id_sd]||null,role:d[C.role],
+    id_entra:d[C.id_entra]?.EMail?.toLowerCase()||'',
+    name:d[C.id_entra]?.Title||'',
+    code_sd:d.fk_sd?.[Cs.code_sd]||'Toutes'
+  }));
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim().toLowerCase();
+  const pwd=document.getElementById('login-pwd').value;
+  if(!email||!pwd) return;
+  setLoginUI(true);
+  await delay(700);
+
+  if(CFG.DEMO_MODE){
+    const u=MOCK.users.find(x=>x.email===email&&x.pwd===pwd);
+    if(!u){ setLoginUI(false); showLoginError(true); return; }
+    const droits=MOCK.droits_acces_sd.filter(d=>d.id_entra===email);
+    if(!droits.length){ setLoginUI(false); showLoginError(true,'Aucun accès SD configuré.'); return; }
+    S.user={email,name:u.name,initiales:u.initiales};
+    S.droits=droits;
+    S.role=droits.some(d=>d.role==='ADMIN')?'ADMIN':'SD_USER';
+    S.sdsAutorises=droits.map(d=>({...MOCK.ref_sd.find(s=>s.id_sd===d.fk_id_sd),role:d.role})).filter(Boolean);
+  } else {
+    try {
+      // 1. Utilisateur connecte via cookie SP (session Teams/Entra)
+      const spUser = await spGetCurrentUser();
+      // 2. Verifier coherence email saisi / session SP
+      if(spUser.email !== email){
+        throw new Error(
+          'Email saisi (' + email + ') different de la session SP active (' + spUser.email + '). ' +
+          'Utiliser le meme email que votre compte Teams SNCF.'
+        );
+      }
+      // 3. Droits via $expand=id_entra/EMail
+      const droits = await spGetDroits(spUser.email);
+      if(!droits.length) throw new Error('Aucun acces configure. Contacter votre administrateur.');
+      // 4. SD autorisees
+      const allSds = await spGetSds();
+      const sdsAuth = droits.map(d=>{
+        if(d.role==='ADMIN') return allSds.map(s=>({...s, role:'ADMIN'}));
+        const sd=allSds.find(s=>s.id_sd===d.fk_id_sd);
+        return sd ? [{...sd, role:d.role}] : [];
+      }).flat().reduce((acc,sd)=>{
+        const ex=acc.find(x=>x.id_sd===sd.id_sd);
+        if(!ex) acc.push(sd); else if(sd.role==='ADMIN') ex.role='ADMIN';
+        return acc;
+      },[]);
+      S.user=spUser; S.droits=droits;
+      S.role=droits.some(d=>d.role==='ADMIN')?'ADMIN':'SD_USER';
+      S.sdsAutorises=sdsAuth;
+    } catch(e){ setLoginUI(false); showLoginError(true, e.message); return; }
+  }
+
+  setLoginUI(false);
+  // Routing : si ADMIN seulement → espace admin, sinon espace SD
+  if(S.role==='ADMIN' && !S.droits.some(d=>d.role==='SD_USER')){
+    enterAdmin();
+  } else {
+    enterSD();
+  }
+}
+
+function setLoginUI(loading){
+  document.getElementById('btn-login').disabled=loading;
+  document.getElementById('login-spinner').classList.toggle('show',loading);
+  if(loading) showLoginError(false);
+}
+function showLoginError(show,msg='Identifiants incorrects ou accès non autorisé.'){
+  const el=document.getElementById('login-error');
+  el.textContent=msg; el.classList.toggle('show',show);
+}
+
+/* ============================================================
+   NAVIGATION ÉCRANS
+   ============================================================ */
+async function enterSD(){
+  _fillSdUI();
+  document.getElementById('screen-login').style.display='none';
+  document.getElementById('screen-sd').style.display='flex';
+  await _fillCahierDropdown();
+  loadBriques();
+}
+
+function enterAdmin(){
+  _fillAdminUI();
+  document.getElementById('screen-login').style.display='none';
+  document.getElementById('screen-admin').style.display='flex';
+  loadAdminDashboard();
+}
+
+function switchToAdmin(){
+  // Allumer le toggle côté SD avant de basculer
+  document.getElementById('admin-toggle-sw-sd').classList.add('on');
+  document.getElementById('screen-sd').style.display='none';
+  document.getElementById('screen-admin').style.display='flex';
+  // Le toggle côté Admin est toujours ON
+  document.getElementById('admin-toggle-sw-admin').classList.add('on');
+  _fillAdminUI();
+  loadAdminDashboard();
+}
+
+function switchToSd(){
+  // Éteindre le toggle côté Admin
+  document.getElementById('admin-toggle-sw-admin').classList.remove('on');
+  document.getElementById('screen-admin').style.display='none';
+  document.getElementById('screen-sd').style.display='flex';
+  // Toggle côté SD repassé à OFF (on est de retour en espace utilisateur)
+  document.getElementById('admin-toggle-sw-sd').classList.remove('on');
+}
+
+function logout(){
+  document.getElementById('screen-sd').style.display='none';
+  document.getElementById('screen-admin').style.display='none';
+  document.getElementById('screen-login').style.display='flex';
+  document.getElementById('login-pwd').value='';
+  showLoginError(false);
+}
+
+function _fillSdUI(){
+  const ini=S.user.initiales, name=S.user.name;
+  ['sb-sd-avatar','tb-sd-avatar'].forEach(id=>document.getElementById(id).textContent=ini);
+  ['sb-sd-name','tb-sd-name'].forEach(id=>document.getElementById(id).textContent=name);
+  // Rôle label
+  document.getElementById('sb-sd-role').textContent=S.role==='ADMIN'?'Administrateur':'Utilisateur SD';
+  // Toggle admin — permanent pour ADMIN sur les deux écrans, masqué pour SD_USER
+  const isAdmin = S.role==='ADMIN';
+  document.getElementById('sb-admin-toggle').style.display = isAdmin ? 'flex' : 'none';
+  // Le toggle côté SD est OFF (on est dans l'espace SD)
+  document.getElementById('admin-toggle-sw-sd').classList.remove('on');
+  // Dropdown cahier/exercice — exercices actifs de toutes ses SD
+  _fillCahierDropdown();
+}
+
+function _fillAdminUI(){
+  const ini=S.user.initiales, name=S.user.name;
+  ['sb-admin-avatar','tb-admin-avatar'].forEach(id=>document.getElementById(id).textContent=ini);
+  ['sb-admin-name','tb-admin-name'].forEach(id=>document.getElementById(id).textContent=name);
+  // Peupler selects SD dans tous les formulaires admin
+  const sds=MOCK.ref_sd;
+  const sdOpts='<option value="">— SD —</option>'+sds.map(s=>`<option value="${s.id_sd}">${s.code_sd}</option>`).join('');
+  // Selects SD dans les formulaires admin (hors droits-fil-sd géré dynamiquement)
+  ['admin-fil-sd','add-droit-sd','dup-sd','cop-sd-dest','cop-sd-src','vierge-sd'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    const isFilter=id.includes('fil');
+    el.innerHTML=(isFilter?'<option value="">Toutes</option>':'<option value="">— SD —</option>')+sds.map(s=>`<option value="${s.id_sd}">${s.code_sd}</option>`).join('');
+  });
+  const exOpts='<option value="">— Exercice —</option>'+MOCK.ref_exercice.map(e=>`<option value="${e.id_exercice}">${e.annee}</option>`).join('');
+  ['admin-fil-ex','dup-ex','cop-ex-dest','cop-ex-src','vierge-ex'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML=id.includes('fil')?'<option value="">Tous</option>'+MOCK.ref_exercice.map(e=>`<option value="${e.id_exercice}">${e.annee}</option>`).join(''):exOpts;
+  });
+}
+
+function _fillCahierDropdown(){
+  // Liste tous les sd_exercice ACTIFS des SD autorisées
+  const sel=document.getElementById('ctx-cahier-sel');
+  const items=[];
+  S.sdsAutorises.forEach(sd=>{
+    const sdExs=MOCK.sd_exercice.filter(x=>x.fk_id_sd===sd.id_sd&&x.statut==='Actif');
+    sdExs.sort((a,b)=>b.fk_id_exercice-a.fk_id_exercice);
+    sdExs.forEach(sx=>{
+      const ex=MOCK.ref_exercice.find(e=>e.id_exercice===sx.fk_id_exercice);
+      if(ex) items.push({label:`${sd.code_sd}_${ex.annee}`, sdId:sd.id_sd, sdEx:sx, sd, ex});
+    });
+  });
+  sel.innerHTML=items.map((x,i)=>`<option value="${i}">${x.label}</option>`).join('');
+  sel._items=items;
+  if(items.length){
+    S.sdActive=items[0].sd;
+    S.sdExActive=items[0].sdEx;
+    S.cahierNom=items[0].sd.code_sd;
+  }
+}
+
+function onCahierChange(){
+  const sel=document.getElementById('ctx-cahier-sel');
+  const item=sel._items?.[+sel.value];
+  if(!item) return;
+  S.sdActive=item.sd; S.sdExActive=item.sdEx; S.cahierNom=item.sd.code_sd;
+  loadBriques();
+}
+
+/* SIDEBAR collapse */
+function toggleSidebar(screen){
+  document.getElementById(`sb-${screen}`).classList.toggle('collapsed');
+}
+
+/* SD navigation */
+function sdNav(page){
+  document.querySelectorAll('#screen-sd .sb-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById(`sd-nav-${page}`)?.classList.add('active');
+  const pages=['dashboard','briques','mapcrd'];
+  pages.forEach(p=>{
+    const el=document.getElementById(`sd-content-${p}`);
+    if(el) el.classList.toggle('hidden',p!==page);
+  });
+  const titles={dashboard:['Dashboard','Vue d\'ensemble de vos cahiers'],briques:['Cahier des Briques','Référentiel hiérarchique'],mapcrd:['Mapping CRD','Assignation des charges aux briques']};
+  document.getElementById('sd-page-title').textContent=titles[page]?.[0]||page;
+  document.getElementById('sd-page-sub').textContent=titles[page]?.[1]||'';
+}
+
+/* Admin navigation */
+function adminNav(page){
+  document.querySelectorAll('#screen-admin .sb-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById(`admin-nav-${page}`)?.classList.add('active');
+  ['dashboard','cahiers','droits'].forEach(p=>{
+    const el=document.getElementById(`admin-content-${p}`);
+    if(el) el.classList.toggle('hidden',p!==page);
+  });
+  const titles={dashboard:['Dashboard Admin','Vue globale des cahiers et exercices'],cahiers:['Gestion des cahiers','Ouverture et initialisation des exercices'],droits:['Droits d\'accès','Gestion des habilitations par SD']};
+  document.getElementById('admin-page-title').textContent=titles[page]?.[0]||page;
+  document.getElementById('admin-page-sub').textContent=titles[page]?.[1]||'';
+  if(page==='droits') renderDroitsTable();
+  if(page==='cahiers') renderMethodeTable();
+}
+
+/* ============================================================
+   BRIQUES — données
+   ============================================================ */
+let bData={n1:[],n2:[],n3:[]};
+let bRows=[], bFiltered=[];
+let sortState={col:null,dir:'asc'};
+let dragSrc=null;
+
+async function loadBriques(){
+  if(!S.sdExActive) return;
+  document.getElementById('status-spinner').style.display='inline-block';
+  try {
+    const sdExId = S.sdExActive.id;
+    bData.n1 = await spGetN1(sdExId);
+    const n1ids = bData.n1.map(x=>x.id_n1);
+    bData.n2 = await spGetN2(n1ids);
+    const n2ids = bData.n2.map(x=>x.id_n2);
+    bData.n3 = await spGetN3(n2ids);
+    bData.n3.forEach(n=>n.niv0=S.cahierNom);
+    buildRows(); populateFilters(); applyFilters();
+  } catch(e) { showNotif('Erreur chargement : ' + e.message, 'error'); }
+  document.getElementById('status-spinner').style.display='none';
+}
+
+function buildRows(){
+  bRows=[];
+  [...bData.n1].sort((a,b)=>parseInt(a.ordre_n1)-parseInt(b.ordre_n1)).forEach(n1=>{
+    [...bData.n2.filter(x=>x.fk_id_n1===n1.id_n1)].sort((a,b)=>parseInt(a.ordre_n2)-parseInt(b.ordre_n2)).forEach(n2=>{
+      [...bData.n3.filter(x=>x.fk_id_n2===n2.id_n2)].sort((a,b)=>parseInt(a.ordre_n3)-parseInt(b.ordre_n3)).forEach(n3=>{
+        bRows.push({
+          id_n3:n3.id_n3,id_n2:n2.id_n2,id_n1:n1.id_n1,
+          niv0:S.cahierNom,
+          id_complet:`${S.cahierNom}_${S.sdExActive?.fk_id_exercice||'?'}_${String(parseInt(n1.ordre_n1)).padStart(2,'0')}_${String(parseInt(n2.ordre_n2)).padStart(2,'0')}_${String(parseInt(n3.ordre_n3)).padStart(3,'0')}`,
+          n1_ordre:parseInt(n1.ordre_n1),n1_lib:n1.lib_n1,
+          n2_ordre:parseInt(n2.ordre_n2),n2_lib:n2.lib_n2,
+          n3_ordre:parseInt(n3.ordre_n3),n3_lib:n3.lib_n3,
+          commentaire:n3.commentaire||''
+        });
+      });
+    });
+  });
+}
+
+function populateFilters(){
+  const n1Sel=document.getElementById('fil-n1');
+  const cur=n1Sel.value;
+  n1Sel.innerHTML='<option value="">tous</option>'+
+    [...bData.n1].sort((a,b)=>parseInt(a.ordre_n1)-parseInt(b.ordre_n1))
+    .map(n=>`<option value="${n.id_n1}">${parseInt(n.ordre_n1).toString().padStart(2,'0')} — ${n.lib_n1}</option>`).join('');
+  if(cur) n1Sel.value=cur;
+}
+
+function onN1FilterChange(){
+  // Reset N2 à "tous" quand N1 change
+  const n1Id=+document.getElementById('fil-n1').value;
+  const n2Sel=document.getElementById('fil-n2');
+  const n2s=n1Id?bData.n2.filter(x=>x.fk_id_n1===n1Id):bData.n2;
+  n2Sel.innerHTML='<option value="">tous</option>'+
+    [...n2s].sort((a,b)=>parseInt(a.ordre_n2)-parseInt(b.ordre_n2))
+    .map(n=>`<option value="${n.id_n2}">${parseInt(n.ordre_n2).toString().padStart(2,'0')} — ${n.lib_n2}</option>`).join('');
+  applyFilters();
+}
+
+let searchT;
+function onSearch(v){clearTimeout(searchT);searchT=setTimeout(()=>applyFilters(),250);}
+
+function applyFilters(){
+  const q=document.getElementById('search-input').value.trim().toLowerCase();
+  const n1Id=+document.getElementById('fil-n1').value;
+  const n2Id=+document.getElementById('fil-n2').value;
+  bFiltered=[...bRows].filter(r=>{
+    if(n1Id&&r.id_n1!==n1Id) return false;
+    if(n2Id&&r.id_n2!==n2Id) return false;
+    if(q&&![r.niv0,r.id_complet,r.n1_lib,r.n2_lib,r.n3_lib,r.commentaire].some(f=>f.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  // Appliquer tri
+  if(sortState.col) _sortRows();
+  renderTable();
+}
+
+/* ── TRI ── */
+const SI_MAP={n1_ordre:'si-n1',n1_lib:'si-cat',n2_ordre:'si-n2',n2_lib:'si-theme',n3_ordre:'si-n3',n3_lib:'si-sous'};
+function sortCol(col){
+  if(sortState.col===col){
+    sortState.dir=sortState.dir==='asc'?'desc':'asc';
+  } else {
+    sortState.col=col; sortState.dir='asc';
+  }
+  // Reset all icons
+  Object.values(SI_MAP).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.className='sort-icon none';}
+  });
+  // Set active icon
+  const activeId=SI_MAP[col];
+  if(activeId){
+    const el=document.getElementById(activeId);
+    if(el) el.className=`sort-icon ${sortState.dir}`;
+  }
+  _sortRows();
+  renderTable();
+}
+
+function _sortRows(){
+  const {col,dir}=sortState;
+  bFiltered.sort((a,b)=>{
+    let av=a[col],bv=b[col];
+    if(typeof av==='number') return dir==='asc'?av-bv:bv-av;
+    return dir==='asc'?String(av).localeCompare(String(bv)):String(bv).localeCompare(String(av));
+  });
+  // Après tri, recalculer les ordres logiques (tri = nouvel ordre affiché)
+  // Note : on met à jour uniquement l'affichage, pas les ordres stockés, sauf si l'user confirme
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MINI-POPUP réaffectation N2 → N1
+   Affiché dans la cellule N1 d'une ligne lorsque l'utilisateur
+   veut changer le N1 parent d'un N2.
+───────────────────────────────────────────────────────────── */
+let _reasignPopup = null;
+
+function openReasignN2(n2Id, anchorEl) {
+  closeReasignPopup();
+  const n2 = bData.n2.find(x => x.id_n2 === n2Id);
+  if (!n2) return;
+
+  const popup = document.createElement('div');
+  popup.id = 'reasign-popup';
+  popup.style.cssText = `
+    position:absolute;background:#fff;border:.5px solid #b5d4f4;border-radius:9px;
+    padding:.85rem 1rem;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:500;
+    min-width:260px;display:flex;flex-direction:column;gap:.65rem;font-size:12px;
+  `;
+  popup.innerHTML = `
+    <div style="font-weight:600;color:#1a1a1a;font-size:13px">Changer le Niveau 1 parent</div>
+    <div style="color:#888;font-size:11px">Thème P&L : <strong>${n2.lib_n2}</strong></div>
+    <select id="reasign-n1-sel" style="padding:7px 9px;border-radius:6px;border:.5px solid #ddd;font-size:12px;outline:none;width:100%">
+      ${[...bData.n1].sort((a,b)=>parseInt(a.ordre_n1)-parseInt(b.ordre_n1))
+        .map(n=>`<option value="${n.id_n1}" ${n.id_n1===n2.fk_id_n1?'selected':''}>${String(parseInt(n.ordre_n1)).padStart(2,'0')} — ${n.lib_n1}</option>`)
+        .join('')}
+    </select>
+    <div style="display:flex;gap:6px;justify-content:flex-end">
+      <button onclick="closeReasignPopup()" style="padding:5px 11px;border-radius:6px;border:.5px solid #ddd;background:#fff;cursor:pointer;font-size:12px">Annuler</button>
+      <button onclick="confirmReasignN2(${n2Id})" style="padding:5px 11px;border-radius:6px;border:none;background:#4f6ef7;color:#fff;cursor:pointer;font-size:12px;font-weight:500">Confirmer</button>
+    </div>`;
+
+  // Positionner sous l'élément ancre
+  const rect = anchorEl.getBoundingClientRect();
+  popup.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+  popup.style.left = (rect.left  + window.scrollX)      + 'px';
+  document.body.appendChild(popup);
+  _reasignPopup = popup;
+
+  // Fermer sur clic extérieur
+  setTimeout(() => document.addEventListener('click', _outsideReasign), 0);
+}
+
+function _outsideReasign(e) {
+  if (_reasignPopup && !_reasignPopup.contains(e.target)) closeReasignPopup();
+}
+function closeReasignPopup() {
+  if (_reasignPopup) { _reasignPopup.remove(); _reasignPopup = null; }
+  document.removeEventListener('click', _outsideReasign);
+}
+
+async function confirmReasignN2(n2Id) {
+  const newN1Id = +document.getElementById('reasign-n1-sel').value;
+  const n2 = bData.n2.find(x => x.id_n2 === n2Id);
+  if (!n2 || n2.fk_id_n1 === newN1Id) { closeReasignPopup(); return; }
+
+  // Nouvel ordre = max+1 dans le N1 de destination
+  const destN2s = bData.n2.filter(x => x.fk_id_n1 === newN1Id);
+  const newOrdre = destN2s.length ? Math.max(...destN2s.map(x=>parseInt(x.ordre_n2)))+1 : 1;
+  n2.fk_id_n1   = newN1Id;
+  n2.ordre_n2   = String(newOrdre);
+
+  await spMerge(CFG.LISTS.ref_n2, n2Id, { fk_id_n1: newN1Id, ordre_n2: String(newOrdre) });
+  closeReasignPopup();
+  buildRows(); applyFilters();
+  showNotif(`N2 déplacé vers le N1 sélectionné · Ordre recalculé ✓`, 'success');
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RENDU TABLE
+   — Entrée = valider (preventDefault, blur)
+   — Cellule N1 libellé : icône 🔀 pour réaffectation N2→N1
+───────────────────────────────────────────────────────────── */
+function _makeCell(content, field, rowId, extraClass='', title='') {
+  const span = document.createElement('span');
+  span.className = 'cell-editable' + (extraClass ? ' '+extraClass : '');
+  span.contentEditable = 'true';
+  span.dataset.field = field;
+  span.dataset.id    = rowId;
+  if (title) span.title = title;
+  span.textContent = content;
+
+  span.addEventListener('focus',  () => { span.dataset.prev = span.textContent; });
+  span.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();   // empêche retour à la ligne
+      span.blur();          // déclenche la validation via onblur → saveInline
+    }
+    if (e.key === 'Escape') {
+      span.textContent = span.dataset.prev;
+      span.blur();
+    }
+  });
+  span.addEventListener('blur', () => saveInline(span, +rowId, field));
+  return span;
+}
+
+function renderTable() {
+  const body = document.getElementById('briques-body');
+  body.innerHTML = '';
+  if (!bFiltered.length) {
+    body.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:2rem;color:#bbb;font-size:13px">Aucune brique trouvée</td></tr>';
+    updateStatus(); return;
+  }
+
+  let lastN1 = null, lastN2 = null;
+
+  bFiltered.forEach((r, idx) => {
+    const isNewN1 = r.id_n1 !== lastN1;
+    const isNewN2 = r.id_n2 !== lastN2;
+    lastN1 = r.id_n1; lastN2 = r.id_n2;
+
+    const tr = document.createElement('tr');
+    tr.dataset.id  = r.id_n3;
+    tr.dataset.idx = idx;
+    tr.draggable   = true;
+    if (isNewN1) tr.style.borderTop = '.5px solid #e8e8e6';
+
+    // ── Colonne drag ──
+    const tdDrag = document.createElement('td');
+    tdDrag.innerHTML = '<div class="drag-handle">⠿</div>';
+
+    // ── Niv0 (non éditable) ──
+    const tdNiv0 = document.createElement('td');
+    tdNiv0.innerHTML = `<span class="niv0-code">${r.niv0}</span>`;
+
+    // ── ID complet (non éditable) ──
+    const tdId = document.createElement('td');
+    tdId.innerHTML = `<span class="id-code">${r.id_complet}</span>`;
+
+    // ── NIV1 ordre ──
+    const tdN1O = document.createElement('td');
+    tdN1O.style.textAlign = 'center';
+    tdN1O.appendChild(_makeCell(String(r.n1_ordre).padStart(2,'0'), 'n1_ordre', r.id_n3, 'niv-n1'));
+
+    // ── NIV1 libellé + bouton réaffectation N2 si première occurrence ──
+    const tdN1L = document.createElement('td');
+    if (isNewN1) {
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'display:flex;align-items:center;gap:6px';
+      wrapper.appendChild(_makeCell(r.n1_lib, 'n1_lib', r.id_n3));
+      // Bouton réaffectation N2→N1 (change le N1 parent du N2 concerné)
+      const btn = document.createElement('button');
+      btn.title   = 'Changer le N1 parent de ce N2';
+      btn.style.cssText = 'display:none;width:20px;height:20px;border-radius:4px;border:.5px solid #c7d2fe;background:#f0f0ff;cursor:pointer;font-size:11px;align-items:center;justify-content:center;flex-shrink:0';
+      btn.textContent = '⇄';
+      btn.onclick = (e) => { e.stopPropagation(); openReasignN2(r.id_n2, btn); };
+      wrapper.appendChild(btn);
+      // Afficher le bouton au survol de la ligne
+      tr.addEventListener('mouseenter', () => btn.style.display = 'flex');
+      tr.addEventListener('mouseleave', () => btn.style.display = 'none');
+      tdN1L.appendChild(wrapper);
+    } else {
+      const ghost = document.createElement('span');
+      ghost.style.color = '#d0d0ce';
+      ghost.textContent = r.n1_lib;
+      tdN1L.appendChild(ghost);
+    }
+
+    // ── NIV2 ordre ──
+    const tdN2O = document.createElement('td');
+    tdN2O.style.textAlign = 'center';
+    tdN2O.appendChild(_makeCell(String(r.n2_ordre).padStart(2,'0'), 'n2_ordre', r.id_n3, 'niv-n2'));
+
+    // ── NIV2 libellé ──
+    const tdN2L = document.createElement('td');
+    if (isNewN2) {
+      tdN2L.appendChild(_makeCell(r.n2_lib, 'n2_lib', r.id_n3));
+    } else {
+      const ghost = document.createElement('span');
+      ghost.style.color = '#d0d0ce';
+      ghost.textContent = r.n2_lib;
+      tdN2L.appendChild(ghost);
+    }
+
+    // ── NIV3 ordre ──
+    const tdN3O = document.createElement('td');
+    tdN3O.style.textAlign = 'center';
+    tdN3O.appendChild(_makeCell(String(r.n3_ordre).padStart(3,'0'), 'n3_ordre', r.id_n3, 'niv-n3'));
+
+    // ── NIV3 libellé ──
+    const tdN3L = document.createElement('td');
+    tdN3L.appendChild(_makeCell(r.n3_lib, 'n3_lib', r.id_n3));
+
+    // ── Commentaire ──
+    const tdComm = document.createElement('td');
+    const commCell = _makeCell(r.commentaire || '—', 'commentaire', r.id_n3,
+      'comm-cell' + (r.commentaire ? ' has-comm' : ''), r.commentaire);
+    tdComm.appendChild(commCell);
+
+    // ── Actions ──
+    const tdAct = document.createElement('td');
+    tdAct.innerHTML = `<div class="row-actions">
+      <button class="act-btn" title="Modifier" onclick="openModalEdit(${r.id_n3})">✏</button>
+      <button class="act-btn del" title="Supprimer" onclick="deleteRow(${r.id_n3})">🗑</button>
+    </div>`;
+
+    [tdDrag,tdNiv0,tdId,tdN1O,tdN1L,tdN2O,tdN2L,tdN3O,tdN3L,tdComm,tdAct].forEach(td=>tr.appendChild(td));
+
+    // Drag & drop
+    tr.addEventListener('dragstart', e => { dragSrc=tr; setTimeout(()=>tr.classList.add('dragging'),0); e.dataTransfer.effectAllowed='move'; });
+    tr.addEventListener('dragover',  e => { e.preventDefault(); document.querySelectorAll('#briques-body tr').forEach(x=>x.classList.remove('drag-over')); tr.classList.add('drag-over'); });
+    tr.addEventListener('dragleave', () => tr.classList.remove('drag-over'));
+    tr.addEventListener('drop',      e => { e.preventDefault(); tr.classList.remove('drag-over'); handleDrop(tr); });
+    tr.addEventListener('dragend',   () => { document.querySelectorAll('#briques-body tr').forEach(x=>x.classList.remove('dragging','drag-over')); dragSrc=null; });
+
+    body.appendChild(tr);
+  });
+  updateStatus();
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ÉDITION INLINE — saveInline
+   Règles de propagation :
+   • n1_lib → MERGE ref_n1(id_n1)  + propagation visuelle toutes les lignes du même N1
+   • n2_lib → MERGE ref_n2(id_n2)  + propagation visuelle toutes les lignes du même N2
+   • n3_lib / commentaire → MERGE ref_n3(id_n3) uniquement
+   • n1_ordre → MERGE ref_n1, batch tri décroissant anti-collision, rebuild
+   • n2_ordre → MERGE ref_n2, même batch
+   • n3_ordre → MERGE ref_n3, même batch
+───────────────────────────────────────────────────────────── */
+async function saveInline(el, id, field) {
+  const val = el.textContent.trim();
+  if (!val || val === el.dataset.prev) return;
+  const r = bFiltered.find(x => x.id_n3 === id);
+  if (!r) return;
+
+  /* ── Champs ORDRE : validation doublon + batch MERGE ── */
+  if (['n1_ordre','n2_ordre','n3_ordre'].includes(field)) {
+    const num = parseInt(val);
+    if (isNaN(num) || num < 1) { el.textContent = el.dataset.prev; return; }
+
+    // Détection doublon dans le bon périmètre
+    let isDupe = false;
+    if (field === 'n3_ordre') isDupe = bData.n3.filter(x=>x.fk_id_n2===r.id_n2&&x.id_n3!==id).some(x=>parseInt(x.ordre_n3)===num);
+    if (field === 'n2_ordre') isDupe = bData.n2.filter(x=>x.fk_id_n1===r.id_n1&&x.id_n2!==r.id_n2).some(x=>parseInt(x.ordre_n2)===num);
+    if (field === 'n1_ordre') isDupe = bData.n1.filter(x=>x.id_n1!==r.id_n1).some(x=>parseInt(x.ordre_n1)===num);
+
+    if (isDupe) {
+      el.classList.add('error');
+      document.getElementById('dupe-banner').classList.add('show');
+      document.getElementById('dupe-msg').textContent =
+        `Doublon : ordre ${num} existe déjà au niveau ${field.replace('_ordre','').toUpperCase()}.`;
+      el.textContent = el.dataset.prev;
+      return;
+    }
+    el.classList.remove('error');
+    document.getElementById('dupe-banner').classList.remove('show');
+
+    // Réordonnancement en mémoire (logique décalage) + batch MERGE tri décroissant
+    if (field === 'n3_ordre') {
+      const siblings = bData.n3.filter(x=>x.fk_id_n2===r.id_n2);
+      const src = siblings.find(x=>x.id_n3===id);
+      const so = parseInt(src.ordre_n3), to_ = num;
+      if(so<to_) siblings.forEach(x=>{const o=parseInt(x.ordre_n3);if(o>so&&o<=to_)x.ordre_n3=String(o-1);});
+      else        siblings.forEach(x=>{const o=parseInt(x.ordre_n3);if(o>=to_&&o<so)x.ordre_n3=String(o+1);});
+      src.ordre_n3 = String(to_);
+      const sorted=[...siblings].sort((a,b)=>parseInt(b.ordre_n3)-parseInt(a.ordre_n3));
+      for(const item of sorted){await spMerge(CFG.LISTS.ref_n3,item.id_n3,{ordre_n3:item.ordre_n3});await delay(50);}
+    }
+    if (field === 'n2_ordre') {
+      const siblings = bData.n2.filter(x=>x.fk_id_n1===r.id_n1);
+      const src = siblings.find(x=>x.id_n2===r.id_n2);
+      const so = parseInt(src.ordre_n2), to_ = num;
+      if(so<to_) siblings.forEach(x=>{const o=parseInt(x.ordre_n2);if(o>so&&o<=to_)x.ordre_n2=String(o-1);});
+      else        siblings.forEach(x=>{const o=parseInt(x.ordre_n2);if(o>=to_&&o<so)x.ordre_n2=String(o+1);});
+      src.ordre_n2 = String(to_);
+      const sorted=[...siblings].sort((a,b)=>parseInt(b.ordre_n2)-parseInt(a.ordre_n2));
+      for(const item of sorted){await spMerge(CFG.LISTS.ref_n2,item.id_n2,{ordre_n2:item.ordre_n2});await delay(50);}
+    }
+    if (field === 'n1_ordre') {
+      const src = bData.n1.find(x=>x.id_n1===r.id_n1);
+      const so = parseInt(src.ordre_n1), to_ = num;
+      if(so<to_) bData.n1.forEach(x=>{const o=parseInt(x.ordre_n1);if(o>so&&o<=to_)x.ordre_n1=String(o-1);});
+      else        bData.n1.forEach(x=>{const o=parseInt(x.ordre_n1);if(o>=to_&&o<so)x.ordre_n1=String(o+1);});
+      src.ordre_n1 = String(to_);
+      const sorted=[...bData.n1].sort((a,b)=>parseInt(b.ordre_n1)-parseInt(a.ordre_n1));
+      for(const item of sorted){await spMerge(CFG.LISTS.ref_n1,item.id_n1,{ordre_n1:item.ordre_n1});await delay(50);}
+    }
+
+    showNotif(`Ordre ${field.replace('_ordre','').toUpperCase()} réorganisé ✓`, 'success');
+    buildRows(); applyFilters();
+    return;
+  }
+
+  /* ── Champs LIBELLÉ : propagation sur tout le groupe ── */
+  if (field === 'n1_lib') {
+    // Mettre à jour TOUS les items du même id_n1
+    const n1Item = bData.n1.find(x=>x.id_n1===r.id_n1);
+    if (n1Item) n1Item.lib_n1 = val;
+    await spMerge(CFG.LISTS.ref_n1, r.id_n1, { lib_n1: val });
+    // Propagation visuelle immédiate sur toutes les lignes du N1
+    bRows.filter(x=>x.id_n1===r.id_n1).forEach(x=>x.n1_lib=val);
+    showNotif(`Catégorie P&L "${val}" mise à jour sur toutes les lignes ✓`, 'success');
+    buildRows(); applyFilters();
+    return;
+  }
+
+  if (field === 'n2_lib') {
+    const n2Item = bData.n2.find(x=>x.id_n2===r.id_n2);
+    if (n2Item) n2Item.lib_n2 = val;
+    await spMerge(CFG.LISTS.ref_n2, r.id_n2, { lib_n2: val });
+    bRows.filter(x=>x.id_n2===r.id_n2).forEach(x=>x.n2_lib=val);
+    showNotif(`Thème P&L "${val}" mis à jour sur toutes les lignes ✓`, 'success');
+    buildRows(); applyFilters();
+    return;
+  }
+
+  if (field === 'n3_lib') {
+    const n3Item = bData.n3.find(x=>x.id_n3===id);
+    if (n3Item) n3Item.lib_n3 = val;
+    await spMerge(CFG.LISTS.ref_n3, id, { lib_n3: val });
+    bRows.filter(x=>x.id_n3===id).forEach(x=>x.n3_lib=val);
+    showNotif(`Sous-thème P&L mis à jour ✓`, 'success');
+    buildRows(); applyFilters();
+    return;
+  }
+
+  if (field === 'commentaire') {
+    const n3Item = bData.n3.find(x=>x.id_n3===id);
+    if (n3Item) n3Item.commentaire = val==='—'?'':val;
+    await spMerge(CFG.LISTS.ref_n3, id, { commentaire: val==='—'?'':val });
+    showNotif('Commentaire mis à jour ✓', 'success');
+    buildRows(); applyFilters();
+  }
+}
+
+/* ── DRAG & DROP ── */
+async function handleDrop(targetTr){
+  if(!dragSrc||dragSrc===targetTr) return;
+  const srcId=+dragSrc.dataset.id, tgtId=+targetTr.dataset.id;
+  const src=bFiltered[+dragSrc.dataset.idx], tgt=bFiltered[+targetTr.dataset.idx];
+  if(!src||!tgt) return;
+  if(src.id_n2===tgt.id_n2){
+    const siblings=bData.n3.filter(x=>x.fk_id_n2===src.id_n2);
+    const si=siblings.find(x=>x.id_n3===src.id_n3), ti=siblings.find(x=>x.id_n3===tgt.id_n3);
+    if(!si||!ti) return;
+    const so=parseInt(si.ordre_n3), to_=parseInt(ti.ordre_n3);
+    if(so<to_) siblings.forEach(x=>{const o=parseInt(x.ordre_n3);if(o>so&&o<=to_)x.ordre_n3=String(o-1);});
+    else        siblings.forEach(x=>{const o=parseInt(x.ordre_n3);if(o>=to_&&o<so)x.ordre_n3=String(o+1);});
+    si.ordre_n3=String(to_);
+    const sorted=[...siblings].sort((a,b)=>parseInt(b.ordre_n3)-parseInt(a.ordre_n3));
+    for(const item of sorted){await spMerge(CFG.LISTS.ref_n3,item.id_n3,{ordre_n3:item.ordre_n3});await delay(50);}
+    showNotif('Ordre mis à jour ✓','success');
+  } else {
+    const destN3s=bData.n3.filter(x=>x.fk_id_n2===tgt.id_n2);
+    const maxO=destN3s.length?Math.max(...destN3s.map(x=>parseInt(x.ordre_n3))):0;
+    const n3item=bData.n3.find(x=>x.id_n3===src.id_n3);
+    if(n3item){n3item.fk_id_n2=tgt.id_n2;n3item.ordre_n3=String(maxO+1);}
+    await spMerge(CFG.LISTS.ref_n3,src.id_n3,{fk_id_n2:tgt.id_n2,ordre_n3:String(maxO+1)});
+    showNotif(`Brique déplacée vers "${tgt.n2_lib}" ✓`,'success');
+  }
+  buildRows(); applyFilters();
+}
+
+/* ── CRUD ── */
+async function deleteRow(id){
+  if(!confirm('Supprimer cette brique N3 ?')) return;
+  await spDelete(CFG.LISTS.ref_n3,id);
+  bData.n3=bData.n3.filter(x=>x.id_n3!==id);
+  buildRows(); applyFilters();
+  showNotif('Brique supprimée ✓','success');
+}
+
+function updateStatus(){
+  const n1c=[...new Set(bFiltered.map(r=>r.id_n1))].length;
+  const n2c=[...new Set(bFiltered.map(r=>r.id_n2))].length;
+  document.getElementById('status-text').textContent=`${bFiltered.length} lignes · ${n1c} N1 · ${n2c} N2 · ${bFiltered.length} N3`;
+  document.getElementById('bottom-count').textContent=`${bFiltered.length} lignes affichées · ${n1c} Niveau 1 · ${n2c} Niveau 2 · ${bFiltered.length} Niveau 3 · périmètre ${S.cahierNom} ${MOCK.ref_exercice.find(e=>e.id_exercice===S.sdExActive?.fk_id_exercice)?.annee||''}`;
+}
+
+function exportCsv(){
+  const rows=[['Niv0','ID Complet','NIV1 Ordre','Catégorie P&L','NIV2 Ordre','Thème P&L','NIV3 Ordre','Sous-thème P&L','Commentaires']];
+  bFiltered.forEach(r=>rows.push([r.niv0,r.id_complet,r.n1_ordre,r.n1_lib,r.n2_ordre,r.n2_lib,r.n3_ordre,r.n3_lib,r.commentaire]));
+  const csv=rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(';')).join('\n');
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download=`cahier_briques_${S.cahierNom}.csv`; a.click();
+  showNotif('Export CSV téléchargé ✓','success');
+}
+
+/* ============================================================
+   MODAL NOUVELLE BRIQUE
+   ============================================================ */
+let modalNiv=1;
+const NIV_META={
+  1:{title:'Ajouter une brique · Niveau 1',sub:'Nouvelle catégorie P&L à la racine du cahier.'},
+  2:{title:'Ajouter une brique · Niveau 2',sub:'Nouveau thème P&L rattaché à un Niveau 1 existant.'},
+  3:{title:'Ajouter une brique · Niveau 3',sub:'Rattachement à un couple Niveau 1 × Niveau 2 existant.'},
+};
+
+function openModalNew(){
+  modalNiv=1;
+  _populateN1Selects();
+  _fillNiv0InModal();
+  _renderRefN1();
+  setNiveau(1);
+  ['fn1-lib','fn1-ordre','fn2-lib','fn2-ordre','fn3-lib','fn3-ordre','fn3-comment'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('fn2-pn1').value='';
+  document.getElementById('fn3-pn1').value='';
+  document.getElementById('fn3-pn2').innerHTML='<option value="">— Choisir N1 d\'abord —</option>';
+  document.getElementById('fn3-pn2').disabled=true;
+  document.getElementById('modal-new').classList.add('show');
+}
+function closeModalNew(){document.getElementById('modal-new').classList.remove('show');}
+
+function setNiveau(n){
+  modalNiv=n;
+  [1,2,3].forEach(i=>document.getElementById(`nbtn-${i}`).classList.toggle('active',i===n));
+  document.getElementById('sect-n1').style.display=n===1?'':'none';
+  document.getElementById('sect-n2').style.display=n===2?'':'none';
+  document.getElementById('sect-n3').style.display=n===3?'':'none';
+  document.getElementById('mn-title').textContent=NIV_META[n].title;
+  document.getElementById('mn-sub').textContent=NIV_META[n].sub;
+  _updateIdCalc();
+}
+
+function _populateN1Selects(){
+  const sorted=[...bData.n1].sort((a,b)=>parseInt(a.ordre_n1)-parseInt(b.ordre_n1));
+  const opts='<option value="">— Sélectionner —</option>'+sorted.map(n=>`<option value="${n.id_n1}">${String(parseInt(n.ordre_n1)).padStart(2,'0')} - ${n.lib_n1}</option>`).join('');
+  ['fn2-pn1','fn3-pn1'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+}
+function _fillNiv0InModal(){
+  ['fn1-niv0','fn2-niv0','fn3-niv0'].forEach(id=>{const el=document.getElementById(id);if(el){el.value=S.cahierNom;el.disabled=true;}});
+}
+function _renderRefN1(filter=''){
+  const q=filter.toLowerCase();
+  const items=[...bData.n1].sort((a,b)=>parseInt(a.ordre_n1)-parseInt(b.ordre_n1)).filter(n=>!q||n.lib_n1.toLowerCase().includes(q));
+  const el=document.getElementById('rl-n1');
+  el.innerHTML=items.length?items.map(n=>`<div class="ref-item"><span class="ref-num">${String(parseInt(n.ordre_n1)).padStart(2,'0')}</span><span>${n.lib_n1}</span></div>`).join(''):'<div class="ref-empty">Aucun résultat</div>';
+}
+function _renderRefN2(n1Id,filter=''){
+  const el=document.getElementById('rl-n2');
+  if(!n1Id){el.innerHTML='<div class="ref-empty">Sélectionner un Niveau 1</div>';return;}
+  const q=filter.toLowerCase();
+  let items=[...bData.n2.filter(x=>x.fk_id_n1===n1Id)].sort((a,b)=>parseInt(a.ordre_n2)-parseInt(b.ordre_n2));
+  if(q) items=items.filter(n=>n.lib_n2.toLowerCase().includes(q));
+  el.innerHTML=items.length?items.map(n=>`<div class="ref-item"><span class="ref-num">${String(parseInt(n.ordre_n2)).padStart(2,'0')}</span><span>${n.lib_n2}</span></div>`).join(''):'<div class="ref-empty">Aucun N2 pour ce N1</div>';
+}
+function filterRef(lv,val){
+  if(lv==='n1') _renderRefN1(val);
+  if(lv==='n2') _renderRefN2(+document.getElementById('fn2-pn1').value,val);
+}
+function onN2P1Change(){
+  const n1Id=+document.getElementById('fn2-pn1').value;
+  _renderRefN2(n1Id);
+  if(n1Id){const n2s=bData.n2.filter(x=>x.fk_id_n1===n1Id);document.getElementById('fn2-ordre').value=String((n2s.length?Math.max(...n2s.map(x=>parseInt(x.ordre_n2)))+1:1)).padStart(2,'0');}
+  _updateIdCalc();
+}
+function onN3P1Change(){
+  const n1Id=+document.getElementById('fn3-pn1').value;
+  const sel=document.getElementById('fn3-pn2');
+  if(!n1Id){sel.innerHTML='<option value="">— Choisir N1 d\'abord —</option>';sel.disabled=true;_updateIdCalc();return;}
+  const n2s=[...bData.n2.filter(x=>x.fk_id_n1===n1Id)].sort((a,b)=>parseInt(a.ordre_n2)-parseInt(b.ordre_n2));
+  sel.innerHTML='<option value="">— Sélectionner —</option>'+n2s.map(n=>`<option value="${n.id_n2}">${String(parseInt(n.ordre_n2)).padStart(2,'0')} - ${n.lib_n2}</option>`).join('');
+  sel.disabled=false; _updateIdCalc();
+}
+function onN3P2Change(){
+  const n2Id=+document.getElementById('fn3-pn2').value;
+  if(n2Id){const n3s=bData.n3.filter(x=>x.fk_id_n2===n2Id);document.getElementById('fn3-ordre').value=String((n3s.length?Math.max(...n3s.map(x=>parseInt(x.ordre_n3)))+1:1)).padStart(3,'0');}
+  _updateIdCalc();
+}
+function _updateIdCalc(){
+  const sd=S.cahierNom||'SD',ex=MOCK.ref_exercice.find(e=>e.id_exercice===S.sdExActive?.fk_id_exercice)?.annee||'????';
+  let v='';
+  if(modalNiv===1){const n=bData.n1;const next=n.length?Math.max(...n.map(x=>parseInt(x.ordre_n1)))+1:1;v=`${sd}_${ex}_${String(next).padStart(2,'0')}_**_***`;}
+  else if(modalNiv===2){const n1Id=+document.getElementById('fn2-pn1').value;const n1=bData.n1.find(x=>x.id_n1===n1Id);const n1o=n1?String(parseInt(n1.ordre_n1)).padStart(2,'0'):'**';const n2s=n1Id?bData.n2.filter(x=>x.fk_id_n1===n1Id):[];const next=n2s.length?Math.max(...n2s.map(x=>parseInt(x.ordre_n2)))+1:1;v=`${sd}_${ex}_${n1o}_${String(next).padStart(2,'0')}_***`;}
+  else{const n1Id=+document.getElementById('fn3-pn1').value;const n2Id=+document.getElementById('fn3-pn2').value;const n1=bData.n1.find(x=>x.id_n1===n1Id);const n2=bData.n2.find(x=>x.id_n2===n2Id);const n1o=n1?String(parseInt(n1.ordre_n1)).padStart(2,'0'):'**';const n2o=n2?String(parseInt(n2.ordre_n2)).padStart(2,'0'):'**';const n3s=n2Id?bData.n3.filter(x=>x.fk_id_n2===n2Id):[];const next=n3s.length?Math.max(...n3s.map(x=>parseInt(x.ordre_n3)))+1:1;v=`${sd}_${ex}_${n1o}_${n2o}_${String(next).padStart(3,'0')}`;}
+  document.getElementById('id-calc').textContent=v;
+}
+
+async function saveNiveau(){
+  const sd=S.cahierNom, ex=MOCK.ref_exercice.find(e=>e.id_exercice===S.sdExActive?.fk_id_exercice)?.annee||'?';
+  if(modalNiv===1){
+    const lib=document.getElementById('fn1-lib').value.trim();
+    if(!lib){showNotif('Libellé N1 requis','error');return;}
+    const next=bData.n1.length?Math.max(...bData.n1.map(x=>parseInt(x.ordre_n1)))+1:1;
+    const ordre=document.getElementById('fn1-ordre').value.trim()||String(next);
+    const item={id_n1:Date.now(),fk_id_sd_exercice:S.sdExActive?.id,lib_n1:lib,ordre_n1:ordre};
+    bData.n1.push(item);
+    await spPost(CFG.LISTS.ref_n1,{fk_id_sd_exercice:item.fk_id_sd_exercice,lib_n1:lib,ordre_n1:ordre});
+    showNotif(`N1 "${lib}" créé ✓`,'success');
+  } else if(modalNiv===2){
+    const n1Id=+document.getElementById('fn2-pn1').value;
+    const lib=document.getElementById('fn2-lib').value.trim();
+    if(!n1Id||!lib){showNotif('Parent N1 et Libellé N2 requis','error');return;}
+    const n2s=bData.n2.filter(x=>x.fk_id_n1===n1Id);
+    const next=n2s.length?Math.max(...n2s.map(x=>parseInt(x.ordre_n2)))+1:1;
+    const ordre=document.getElementById('fn2-ordre').value.trim()||String(next);
+    const item={id_n2:Date.now(),fk_id_n1:n1Id,lib_n2:lib,ordre_n2:ordre};
+    bData.n2.push(item);
+    await spPost(CFG.LISTS.ref_n2,{fk_id_n1:n1Id,lib_n2:lib,ordre_n2:ordre});
+    showNotif(`N2 "${lib}" créé ✓`,'success');
+  } else {
+    const n1Id=+document.getElementById('fn3-pn1').value;
+    const n2Id=+document.getElementById('fn3-pn2').value;
+    const lib=document.getElementById('fn3-lib').value.trim();
+    const comm=document.getElementById('fn3-comment').value.trim();
+    if(!n1Id||!n2Id||!lib){showNotif('Parent N1, N2 et Libellé N3 requis','error');return;}
+    const n1=bData.n1.find(x=>x.id_n1===n1Id),n2=bData.n2.find(x=>x.id_n2===n2Id);
+    const n3s=bData.n3.filter(x=>x.fk_id_n2===n2Id);
+    const next=n3s.length?Math.max(...n3s.map(x=>parseInt(x.ordre_n3)))+1:1;
+    const ordre=document.getElementById('fn3-ordre').value.trim()||String(next).padStart(3,'0');
+    const code=`${sd}_${ex}_${String(parseInt(n1?.ordre_n1||0)).padStart(2,'0')}_${String(parseInt(n2?.ordre_n2||0)).padStart(2,'0')}_${String(next).padStart(3,'0')}`;
+    const item={id_n3:Date.now(),fk_id_n2:n2Id,lib_n3:lib,niv0:sd,ordre_n3:ordre,commentaire:comm};
+    bData.n3.push(item);
+    await spPost(CFG.LISTS.ref_n3,{fk_id_n2:n2Id,lib_n3:lib,niv0:sd,ordre_n3:ordre,commentaire:comm});
+    showNotif(`N3 créé · ${code}`,'success');
+  }
+  closeModalNew(); buildRows(); applyFilters();
+}
+
+/* ============================================================
+   MODAL ÉDITION N3
+   ============================================================ */
+let editingId=null;
+
+function openModalEdit(id){
+  const r=bFiltered.find(x=>x.id_n3===id);
+  if(!r) return;
+  editingId=id;
+
+  // En-tête
+  document.getElementById('me-id-display').textContent=r.id_complet;
+  document.getElementById('me-niv0').value=r.niv0;
+  document.getElementById('me-lib').value=r.n3_lib;
+  document.getElementById('me-ordre').value=String(r.n3_ordre).padStart(3,'0');
+  document.getElementById('me-comment').value=r.commentaire;
+  document.getElementById('me-ordre-hint').style.display='none';
+
+  // Peupler select N1
+  const sorted=[...bData.n1].sort((a,b)=>parseInt(a.ordre_n1)-parseInt(b.ordre_n1));
+  const n1Sel=document.getElementById('me-n1-sel');
+  n1Sel.innerHTML='<option value="">— Sélectionner —</option>'+
+    sorted.map(n=>`<option value="${n.id_n1}">${String(parseInt(n.ordre_n1)).padStart(2,'0')} - ${n.lib_n1}</option>`).join('');
+  n1Sel.value=r.id_n1;
+
+  // Peupler select N2 selon le N1 courant
+  _populateEditN2(r.id_n1, r.id_n2);
+
+  document.getElementById('modal-edit').classList.add('show');
+}
+
+function _populateEditN2(n1Id, selectedN2Id=null){
+  const n2Sel=document.getElementById('me-n2-sel');
+  if(!n1Id){
+    n2Sel.innerHTML='<option value="">— Choisir N1 d\'abord —</option>';
+    n2Sel.disabled=true; return;
+  }
+  const n2s=[...bData.n2.filter(x=>x.fk_id_n1===+n1Id)].sort((a,b)=>parseInt(a.ordre_n2)-parseInt(b.ordre_n2));
+  n2Sel.innerHTML='<option value="">— Sélectionner —</option>'+
+    n2s.map(n=>`<option value="${n.id_n2}">${String(parseInt(n.ordre_n2)).padStart(2,'0')} - ${n.lib_n2}</option>`).join('');
+  n2Sel.disabled=false;
+  if(selectedN2Id) n2Sel.value=selectedN2Id;
+}
+
+// Appelé quand N1 change dans le modal Edit — reset N2
+function onEditN1Change(){
+  const n1Id=+document.getElementById('me-n1-sel').value;
+  _populateEditN2(n1Id, null); // reset N2 à vide
+}
+
+function closeModalEdit(){
+  document.getElementById('modal-edit').classList.remove('show');
+  editingId=null;
+}
+
+async function saveEdit(){
+  if(!editingId) return;
+  const n1Id=+document.getElementById('me-n1-sel').value;
+  const n2Id=+document.getElementById('me-n2-sel').value;
+  const lib=document.getElementById('me-lib').value.trim();
+  const ordre=document.getElementById('me-ordre').value.trim();
+  const comm=document.getElementById('me-comment').value.trim();
+
+  if(!n1Id||!n2Id||!lib){showNotif('N1, N2 et Libellé sont requis','error');return;}
+
+  const r=bFiltered.find(x=>x.id_n3===editingId);
+  const num=parseInt(ordre);
+  const hintEl=document.getElementById('me-ordre-hint');
+
+  // Vérif doublon ordre N3 dans le N2 de destination
+  if(!isNaN(num)){
+    const dupes=bRows.filter(x=>x.id_n2===n2Id&&x.id_n3!==editingId&&x.n3_ordre===num).length>0;
+    if(dupes){
+      hintEl.style.display='block';
+      document.getElementById('me-ordre').style.borderColor='var(--red)';
+      showNotif(`Doublon ordre N3 : ${num} existe déjà sous ce N2`,'error');
+      return;
+    }
+  }
+  hintEl.style.display='none';
+  document.getElementById('me-ordre').style.borderColor='';
+
+  // Mise à jour en mémoire
+  const n3item=bData.n3.find(x=>x.id_n3===editingId);
+  if(n3item){
+    n3item.lib_n3=lib;
+    n3item.fk_id_n2=n2Id;
+    n3item.ordre_n3=String(isNaN(num)?r.n3_ordre:num);
+    n3item.commentaire=comm;
+  }
+
+  // MERGE SP
+  await spMerge(CFG.LISTS.ref_n3, editingId, {
+    lib_n3:lib,
+    fk_id_n2:n2Id,
+    ordre_n3:String(isNaN(num)?r.n3_ordre:num),
+    commentaire:comm
+  });
+
+  closeModalEdit(); buildRows(); applyFilters();
+  showNotif('Brique modifiée ✓','success');
+}
+
+/* ============================================================
+   ADMIN — Dashboard
+   ============================================================ */
+function loadAdminDashboard(){
+  const actifs=MOCK.sd_exercice.filter(x=>x.statut==='Actif');
+  const lastDate=MOCK.sd_exercice.map(x=>x.last_update).sort().reverse()[0]||'—';
+  document.getElementById('kpi-lastupdate').textContent=lastDate;
+  document.getElementById('kpi-exercices').textContent=actifs.length;
+  document.getElementById('kpi-sds').textContent=MOCK.ref_sd.length;
+  document.getElementById('kpi-briques').textContent=MOCK.ref_n3.length;
+  renderAdminTable();
+}
+
+function renderAdminTable(){
+  const filSd=+document.getElementById('admin-fil-sd')?.value;
+  const filEx=+document.getElementById('admin-fil-ex')?.value;
+  const items=MOCK.sd_exercice.filter(x=>(!filSd||x.fk_id_sd===filSd)&&(!filEx||x.fk_id_exercice===filEx));
+  const body=document.getElementById('admin-ex-body');
+  if(!body) return;
+  const stMap={Actif:'badge-green',Archivé:'badge-gray',Brouillon:'badge-orange'};
+  body.innerHTML=items.map(x=>{
+    const sd=MOCK.ref_sd.find(s=>s.id_sd===x.fk_id_sd)||{code_sd:'?'};
+    const ex=MOCK.ref_exercice.find(e=>e.id_exercice===x.fk_id_exercice)||{annee:'?'};
+    const isActif=x.statut==='Actif';
+    return `<tr>
+      <td class="cb-cell"><input type="checkbox" class="row-cb" data-id="${x.id}"/></td>
+      <td><span class="badge badge-blue">${sd.code_sd}</span></td>
+      <td style="font-weight:500">${sd.code_sd}_${ex.annee}</td>
+      <td>${ex.annee}</td>
+      <td><span class="badge ${stMap[x.statut]||'badge-gray'}">${x.statut}</span></td>
+      <td class="toggle-cell">
+        <input type="checkbox" class="toggle-input" id="tog-${x.id}" ${!isActif?'checked':''} onchange="toggleArchiver(${x.id},this)"/>
+        <label class="toggle-label" for="tog-${x.id}"></label>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleAllCb(cb){document.querySelectorAll('.row-cb').forEach(c=>c.checked=cb.checked);}
+function archiverTous(){
+  const ids=[...document.querySelectorAll('.row-cb:checked')].map(c=>+c.dataset.id);
+  ids.forEach(id=>{const x=MOCK.sd_exercice.find(s=>s.id===id);if(x)x.statut='Archivé';});
+  showNotif(`${ids.length} exercice(s) archivé(s) ✓`,'success');
+  renderAdminTable();
+}
+function toggleArchiver(id,el){
+  const x=MOCK.sd_exercice.find(s=>s.id===id);
+  if(x){x.statut=el.checked?'Archivé':'Actif';showNotif(`Exercice ${x.statut} ✓`,'success');}
+  renderAdminTable();
+}
+
+/* ── ADMIN CAHIERS ── */
+function setMode(m){
+  document.querySelectorAll('.mode-tab').forEach((t,i)=>t.classList.toggle('active',['dupliquer','copier','vierge'][i]===m));
+  document.querySelectorAll('.mode-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById(`mode-${m}`)?.classList.add('active');
+}
+async function ouvrirExercice(){
+  const a=document.getElementById('new-annee').value;
+  if(!a||+a<2024){showNotif('Année invalide','error');return;}
+  if(MOCK.ref_exercice.find(e=>e.annee===+a)){showNotif(`Exercice ${a} existe déjà`,'warn');return;}
+  const id=Date.now();
+  MOCK.ref_exercice.push({id_exercice:id,annee:+a,statut:true});
+  await spPost(CFG.LISTS.ref_exercice,{annee:+a,statut:true});
+  showNotif(`Exercice ${a} ouvert ✓`,'success');
+  document.getElementById('new-annee').value='';
+}
+async function lancerMode(mode){
+  showNotif(`Mode "${mode}" lancé — batch SP en cours...`,'info');
+  await delay(1200);
+  showNotif(`Initialisation "${mode}" terminée ✓`,'success');
+}
+
+function renderMethodeTable(){
+  const table = document.getElementById('methode-table');
+  const sds   = MOCK.ref_sd;
+  const mths  = MOCK.methodes; // toutes les méthodes, actives ou non
+
+  // ── THEAD ──
+  const thead = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  const thSd = document.createElement('th');
+  thSd.textContent = 'SD';
+  thSd.style.textAlign = 'left';
+  headRow.appendChild(thSd);
+  mths.forEach(m => {
+    const th = document.createElement('th');
+    th.style.cssText = 'text-align:center;min-width:90px';
+    th.innerHTML = `<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em">${m.lib}</div>
+      <div style="font-size:9px;color:${m.actif?'#16a34a':'#dc2626'};margin-top:2px">${m.actif?'Actif':'Inactif'}</div>`;
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+
+  // ── TBODY ──
+  const tbody = document.createElement('tbody');
+  sds.forEach(sd => {
+    const map = MOCK.methode_sd[sd.id_sd] || {};
+    const tr = document.createElement('tr');
+
+    // Colonne SD
+    const tdSd = document.createElement('td');
+    tdSd.style.cssText = 'text-align:left;font-weight:600;color:#374151;padding:8px 10px';
+    tdSd.innerHTML = `<span style="background:#eff6ff;border:.5px solid #bfdbfe;color:#1d4ed8;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">${sd.code_sd}</span>`;
+    tr.appendChild(tdSd);
+
+    // Colonnes méthodes — une colonne par méthode
+    mths.forEach(m => {
+      const td = document.createElement('td');
+      td.style.cssText = 'text-align:center;vertical-align:middle;padding:8px';
+
+      const uid = `mth-${sd.id_sd}-${m.id}`;
+      const isOn = !!map[m.id];
+
+      // input type checkbox CACHÉ
+      const inp = document.createElement('input');
+      inp.type      = 'checkbox';
+      inp.className = 'toggle-input';
+      inp.id        = uid;
+      if (isOn) inp.checked = true;
+      inp.addEventListener('change', () => toggleMethode(sd.id_sd, m.id, inp));
+
+      // label toggle (doit être IMMÉDIATEMENT après l'input dans le DOM)
+      const lbl = document.createElement('label');
+      lbl.className = 'toggle-label';
+      lbl.setAttribute('for', uid);
+
+      // Wrapper centré
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;align-items:center;justify-content:center';
+      wrap.appendChild(inp);
+      wrap.appendChild(lbl);
+
+      td.appendChild(wrap);
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  // Remplacer le contenu
+  table.innerHTML = '';
+  table.appendChild(thead);
+  table.appendChild(tbody);
+}
+function toggleMethode(sdId,mId,el){
+  if(!MOCK.methode_sd[sdId]) MOCK.methode_sd[sdId]={};
+  MOCK.methode_sd[sdId][mId]=el.checked;
+  showNotif(`Méthode ${el.checked?'activée':'désactivée'} ✓`,'success');
+}
+
+/* ── ADMIN DROITS ── */
+async function renderDroitsTable(){
+  const filSd=+document.getElementById('droits-fil-sd')?.value||0;
+  const filRole=document.getElementById('droits-fil-role')?.value||'';
+  const body=document.getElementById('droits-body');
+  if(!body) return;
+
+  // Peupler le filtre SD (seulement les SD référencées dans les droits)
+  const selSd=document.getElementById('droits-fil-sd');
+  if(selSd&&selSd.options.length<=1){
+    MOCK.ref_sd.forEach(s=>{
+      const o=document.createElement('option');
+      o.value=s.id_sd; o.textContent=s.code_sd;
+      selSd.appendChild(o);
+    });
+  }
+
+  const allDroits = await spGetAllDroits();
+  const items=allDroits.filter(d=>{
+    if(filRole&&d.role!==filRole) return false;
+    if(filSd&&d.role!=='ADMIN'&&d.fk_id_sd!==filSd) return false;
+    return true;
+  });
+
+  body.innerHTML=items.map(d=>{
+    const isAdmin=d.role==='ADMIN';
+    const sd=isAdmin?null:MOCK.ref_sd.find(s=>s.id_sd===d.fk_id_sd);
+    return `<tr>
+      <td>${isAdmin
+        ? '<span class="badge badge-purple">Toutes les SD</span>'
+        : `<span class="badge badge-blue">${sd?.code_sd||'?'}</span>`}</td>
+      <td>${d.id_entra}</td>
+      <td><span class="badge ${isAdmin?'badge-purple':'badge-blue'}">${d.role}</span></td>
+      <td><button class="btn danger xs" onclick="supprimerDroit(${d.id})">Supprimer</button></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:#bbb;font-size:12px">Aucune habilitation</td></tr>';
+}
+
+/**
+ * ajouterDroit — deux cas :
+ * role='SD_USER' → nécessite une SD sélectionnée
+ * role='ADMIN'   → global, pas de SD (fk_id_sd=null)
+ */
+async function ajouterDroit(role){
+  let email, sdId=null;
+
+  if(role==='SD_USER'){
+    sdId=+document.getElementById('add-droit-sd').value;
+    email=document.getElementById('add-droit-email').value.trim().toLowerCase();
+    if(!sdId||!email){showNotif('SD et email requis pour SD_USER','error');return;}
+    if(MOCK.droits_acces_sd.find(d=>d.fk_id_sd===sdId&&d.id_entra===email&&d.role==='SD_USER')){
+      showNotif('Habilitation SD_USER déjà existante pour cette SD','warn');return;
+    }
+    document.getElementById('add-droit-email').value='';
+  } else {
+    // ADMIN — global
+    email=document.getElementById('add-droit-email-admin').value.trim().toLowerCase();
+    if(!email){showNotif('Email requis pour ADMIN','error');return;}
+    if(MOCK.droits_acces_sd.find(d=>d.id_entra===email&&d.role==='ADMIN')){
+      showNotif('Cet utilisateur est déjà ADMIN','warn');return;
+    }
+    document.getElementById('add-droit-email-admin').value='';
+  }
+
+  const id=Date.now();
+  MOCK.droits_acces_sd.push({id, fk_id_sd:sdId, id_entra:email, role});
+  await spPost(CFG.LISTS.droits_acces_sd,{fk_id_sd:sdId, id_entra:email, role});
+  renderDroitsTable();
+  showNotif(`Habilitation ${role} ajoutée pour ${email} ✓`,'success');
+}
+
+async function supprimerDroit(id){
+  if(!confirm('Supprimer cette habilitation ?')) return;
+  const idx=MOCK.droits_acces_sd.findIndex(d=>d.id===id);
+  if(idx!==-1) MOCK.droits_acces_sd.splice(idx,1);
+  await spDelete(CFG.LISTS.droits_acces_sd,id);
+  renderDroitsTable();
+  showNotif('Habilitation supprimée ✓','success');
+}
+
+/* ============================================================
+   UI HELPERS
+   ============================================================ */
+function showNotif(msg,type='success'){
+  const icons={success:'✓',error:'⚠',info:'ℹ',warn:'⚡'};
+  const n=document.getElementById('notif');
+  n.className=`notif ${type} show`;
+  document.getElementById('notif-msg').textContent=`${icons[type]} ${msg}`;
+  clearTimeout(n._t); n._t=setTimeout(()=>n.classList.remove('show'),4000);
+}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+/* Raccourcis clavier */
+document.addEventListener('keydown',e=>{
+  const appVisible=document.getElementById('screen-sd').style.display!=='none';
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){
+    if(document.getElementById('modal-new').classList.contains('show')) saveNiveau();
+    if(document.getElementById('modal-edit').classList.contains('show')) saveEdit();
+  }
+  if(e.key==='Escape'){closeModalNew();closeModalEdit();}
+  if(appVisible&&e.shiftKey&&e.key==='N') openModalNew();
+  if(appVisible&&(e.metaKey||e.ctrlKey)&&e.key==='e'){e.preventDefault();exportCsv();}
+});
+</script>
+</body>
+</html>
